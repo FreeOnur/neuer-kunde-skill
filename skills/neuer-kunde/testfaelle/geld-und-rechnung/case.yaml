@@ -1,0 +1,9 @@
+schema_version: "1.1"
+name: geld-und-rechnung
+expected_outcome: |
+  Zahlung 2026-003 wird auf bezahlt gesetzt (mit Datum), die Domain als Ausgabe mit Weiterverrechnung eingetragen,
+  die Schlussrechnung bekommt die nächste fortlaufende Nummer 2026-005 (höchste bisher 2026-004 eines anderen
+  Kunden), enthält Restbetrag 900 € plus Domain 15,90 €, ist als .docx und PDF im Projektordner und steht als
+  offen im Blatt Einnahmen. Projekt.md ist aktualisiert.
+context:
+  scaffold_script: place-files.sh

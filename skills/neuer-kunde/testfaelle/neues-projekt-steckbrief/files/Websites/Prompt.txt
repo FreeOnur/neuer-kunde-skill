@@ -1,0 +1,28 @@
+STECKBRIEF FÜR /neuer-kunde
+Ausfüllen, was du schon weißt, Rest leer lassen. Dann im Chat:  /neuer-kunde  und den Steckbrief einfügen.
+
+Für wen:                 (Kunde bezahlt / Kunde unentgeltlich / eigene Website)
+Name (Kunde/Projekt):
+Was macht er, 1 Satz:
+Ansprechpartner + Mail:
+Adresse (für Vertrag):
+Geld über die Seite:     (nein / extern, z. B. Etsy / eigener Shop)
+Land:                    (AT / DE / CH)
+Angebote + Preise:
+Referenzen / Projekte:
+Logo, Fotos, Texte:      (was gibt es, wer schreibt)
+Domain, E-Mail:
+Referenzseiten:          (Link + "Struktur" oder "Stimmung")
+Stilwunsch:
+Deadline, Stunden/Woche:
+Preis, Anzahlung %, Korrekturrunden, Stundensatz (nur bei bezahlt):
+
+KURZANLEITUNG
+/neuer-kunde                      neues Projekt
+/neuer-kunde weiter <Projekt>     am Projekt weitermachen
+/neuer-kunde geld <Projekt> <Text>   Zahlung oder Ausgabe eintragen
+/neuer-kunde vertrag <Projekt>    Vertrag erstellen
+/neuer-kunde rechnung <Projekt>   Rechnung erstellen
+/neuer-kunde fertig <Projekt>     Projekt abschließen, Skill lernt dazu
+/neuer-kunde verbessern           Skill mit dem Gelernten verbessern (wird vorher getestet)
+/neuer-kunde einrichten           Ordner einrichten oder Einstellungen ändern

@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: einrichtung-neuer-user
+expected_outcome: |
+  Ein fremder User ohne bestehenden Ordner bekommt unter ./Websites einen vollständigen Hauptordner:
+  Finanzdokumentation.xlsx (Projekte, Einnahmen, Ausgaben), Vertrags- und Rechnungsvorlage mit Platzhaltern,
+  Kundenvorlage, Werkzeuge, Einstellungen mit Österreich und seinem Namen. Nirgends tauchen Pfade oder Namen
+  des ursprünglichen Skill-Autors auf.

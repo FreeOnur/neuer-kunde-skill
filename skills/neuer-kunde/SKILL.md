@@ -1,0 +1,535 @@
+---
+name: "neuer-kunde"
+description: "/neuer-kunde startet ein Website-Projekt (Kunde oder eigene Seite), fragt alles ab, baut die Seite inkl. 3D, prüft sie mit Tests, Taste-Skill-Gate, Lighthouse und simulierten Kunden (Agents mit Klick-Heatmap), pflegt Projektordner, Geld, Vertrag, Rechnung und verbessert sich nach jedem Projekt. Auch bei 'Kunde hat bezahlt', 'Rechnung schreiben', 'Vertrag für Kunde', 'weiter mit Projekt X' oder 'prüf die Website' verwenden."
+---
+
+# /neuer-kunde — Website-Projekte von A bis Z
+
+Version 6 (03.11.2026). Entstanden aus SMTN (61 Änderungsrunden, Juli bis Oktober 2026), Onur-Portfolio (Oktober 2026, 3D-Welt aus Blender) und einer gemeinsamen Agentur-Seite (November 2026: Kundensicht, kurze Texte, Taste-Skill, Formular mit Resend, 3D aus dem Logo). Der Skill enthält nicht einen Look, sondern den **Weg** dahin und jede Korrektur, die der User unterwegs gemacht hat. Er gilt für **Kundenseiten und eigene Websites**. Ziel: schon im ersten Wurf eine Seite, die eigenständig und echt wirkt, nicht nach Baukasten oder KI.
+
+**Für jeden nutzbar**: Der Skill kennt keine festen Pfade. Wo der Ordner des Users liegt, steht in seiner `einstellungen.json` (Abschnitt 1). Wer den Skill zum ersten Mal nutzt, bekommt seinen Ordner mit den mitgelieferten Werkzeugen eingerichtet (`scripts/` im Skill). Im Text heißt der Ordner des Users `<Hauptordner>`.
+
+Nach jedem Projekt wird dieser Skill besser, aber nur, wenn die neue Version im Test mindestens so gut abschneidet wie die alte (Abschnitt 11).
+
+Sprache: die des Users (Standard Deutsch), locker, kurz. Fachbegriffe nur mit Erklärung.
+
+---
+
+## 0 · Modus erkennen
+
+| Eingabe | Modus |
+| --- | --- |
+| `einrichten`, oder kein Hauptordner gefunden (Abschnitt 1.1) | **Einrichten**: Abschnitt 1.2, danach weiter mit dem ursprünglichen Wunsch |
+| nichts, oder ein ausgefüllter Steckbrief (Vorlage in `<Hauptordner>/Prompt.txt`) | **Neu**: Abschnitte 1 bis 10, Projektordner (3.1) direkt nach der Bestätigung der Fragen anlegen |
+| `weiter <Projekt>` | **Weiter**: `Projekt.md` und die letzte `Notizen/Runde-<N>.md` lesen, Stand zusammenfassen, fragen, was jetzt dran ist (Änderungsrunden: Abschnitt 10) |
+| `geld <Projekt> <Text>` | **Geld**: nur Abschnitt 3.3, dann kurz bestätigen |
+| `vertrag <Projekt>` / `rechnung <Projekt>` | nur Abschnitt 3.4 bzw. 3.5 |
+| `prüfen <Projekt>` oder „prüf die Website“ | **Prüfen**: nur der Qualitäts-Rundgang (Abschnitt 10.1) inkl. Beheben, danach Runden-Notiz. Geht auch für Projekte, die nicht mit diesem Skill gebaut wurden |
+| `fertig <Projekt>` | Projektabschluss (Ende von Abschnitt 10) **und** Skill verbessern (Abschnitt 11) |
+| `verbessern` | nur Abschnitt 11 mit allem, was seit der letzten Version gelernt wurde |
+
+Auch ohne Befehl gilt: Erwähnt der User in einem Projekt Geld („hat bezahlt“, „Domain gekauft für 15 €“), wird es sofort nach 3.3 eingetragen und kurz bestätigt.
+
+---
+
+## 1 · Vorab prüfen (still)
+
+### 1.1 Hauptordner finden
+Der Hauptordner ist der Ordner des Users mit `Finanzdokumentation.xlsx`, `Kunden/` und `_werkzeuge/`. Er ist bei jedem User anders, deshalb nie einen Pfad raten oder aus einem Beispiel übernehmen. Suchen in dieser Reihenfolge, beim ersten Treffer aufhören:
+1. Der User nennt ihn in der Nachricht oder im Steckbrief.
+2. Verbundene Ordner auf dem Rechner (`get_device_info`, dann `device_list_dir`): ein Ordner mit `_werkzeuge/einstellungen.json`, oder mit `Finanzdokumentation.xlsx` **und** `Kunden/Kundenvorlage/` (bestehender Ordner aus Version 2 ohne Einstellungen).
+3. Ein Pfad aus Memory, Projekt-Anweisungen oder früheren Chats (`conversation_search` „Hauptordner neuer-kunde“).
+4. Nichts gefunden: einmal per AskUserQuestion fragen: „Hast du schon einen Ordner für deine Website-Projekte?“ Optionen: „Neu anlegen unter Dokumente/Websites (Empfohlen)“ / „Ja, ich nenne den Pfad“ / „Erst mal nur hier in der Cloud“. Dann Abschnitt 1.2.
+
+Liegt der Ordner auf dem Rechner und ist nicht verbunden: `device_request_folder_access` mit dem gefundenen Pfad. Nach dem ersten Fund dem User einmal anbieten, den Pfad in Memory oder in die Projekt-Anweisungen zu schreiben, damit der nächste Chat ihn sofort hat.
+
+Aus `<Hauptordner>/_werkzeuge/einstellungen.json` kommen alle Pfade und Vorlieben, die der Skill sonst fest eingebaut hätte:
+
+| Schlüssel | Wofür | Standard |
+| --- | --- | --- |
+| `hauptordner` | absoluter Pfad | wird beim Einrichten gesetzt |
+| `code_ordner` | Standard für Frage 20: `projektordner` (= `<Projektordner>/website`) oder ein Pfad, unter dem pro Projekt `<Name>/` entsteht | `projektordner` |
+| `rechtsraum` | Vorauswahl für Frage 4 | leer (fragen) |
+| `referenz_projekte` | Liste `{name, pfad, bausteine}` mit eigenen früheren Projekten, aus denen Code übernommen werden darf (Abschnitt 9) | leer |
+| `skill_repo` | GitHub-Repo `owner/repo` für Skill-Versionen (Abschnitt 11) | leer (dann nur Ordner-Kopie) |
+| `dev_port` | Port für den lokalen Dev-Server | 5000 |
+| `notion_elternseite` | Titel der Notion-Seite, unter der Projekte liegen | `Kunden` |
+
+Fehlt ein Schlüssel, den Standard nehmen und ihn beim nächsten Schreiben ergänzen. Ein Ordner aus Version 2 ohne `einstellungen.json` bekommt sie per `einrichten.py` (legt nur Fehlendes an, überschreibt nichts), danach die Referenzprojekte einmal abfragen.
+
+### 1.2 Einrichten (erster Start oder `einrichten`)
+1. Kurz fragen (AskUserQuestion, eine Runde; ohne Rückfragen gilt die Regel aus Abschnitt 2): Name, Ort, Land (AT/DE/CH), wo der Website-Code hin soll (Projektordner / eigener Code-Ordner), GitHub-Repo für Skill-Versionen (keins / Pfad).
+2. `python <skill>/scripts/einrichten.py <Hauptordner> --name "<Name>" --ort "<Ort>" --rechtsraum <Land> --code-ordner <…> [--skill-repo <owner/repo>]` (`<skill>` = der Ordner, den das Skill-Tool als „Base directory“ meldet). Das Skript legt an, was fehlt: Ordnerbaum (Abschnitt 3), `Finanzdokumentation.xlsx` mit Formeln, `Vertragvorlage.docx`, `Rechnungsvorlage.docx`, `Prompt.txt` (Steckbrief), `_werkzeuge/` mit beiden Skripten, `meine-daten.json`, `einstellungen.json`, `_skills/lernliste.md`. Vorhandenes bleibt unangetastet.
+3. Auf dem Rechner ohne `device_bash`: in der Cloud in einem leeren Ordner einrichten und mit `device_commit_files` in den Hauptordner schreiben.
+4. Dem User zeigen, was neu ist, und sagen: Vertrag und Rechnung sind Vorlagen, keine Rechtsberatung, einmal prüfen lassen (AT: WKO, DE: IHK). Eigene Vorlagen darf er jederzeit reinlegen, solange die `{{PLATZHALTER}}` drin bleiben.
+5. `meine-daten.json` bleibt leer bis zum ersten Vertrag oder zur ersten Rechnung (3.4), nicht vorher alles abfragen.
+
+### 1.3 Werkzeuge und Rechner
+- **Referenzprojekte** aus `referenz_projekte` (Abschnitt 9). Ist ein Ordner für den Zugriff gesperrt: nicht umgehen, öffentliche Repos stattdessen per `git clone` holen. Gibt es keine, gelten die Beschreibungen in Abschnitt 9 als Bauanleitung.
+- Skripte in `<Hauptordner>/_werkzeuge/` sind die des Users und haben Vorrang vor `scripts/` im Skill. Vor dem ersten Aufruf einmal `--help` lesen, falls sie anders aufgerufen werden.
+- Werkzeuge: Notion, Figma (optional), Blender auf dem Rechner (`mcp__remote-devices__Blender__*`, läuft nur, wenn Blender mit MCP-Addon offen ist), Chrome des Users (Claude in Chrome) zum Ansehen von Referenzseiten und `localhost`.
+- **Dateien auf dem Rechner**:
+  - Läuft `device_bash`, dort arbeiten.
+  - Sonst: `device_stage_files` (holt Dateien in die Cloud), bearbeiten, `device_commit_files` zurück (max. 50 Dateien und 100 MB pro Aufruf, max. 30 MB pro Datei, `expectedMtimeMs` mitgeben). Neue Ordner entstehen beim Schreiben automatisch, leere bekommen `.keep`.
+  - Ohne `device_bash` lässt sich nichts löschen: überflüssige Dateien mit einem Leer-Stub überschreiben (`export {};` plus Kommentar „kann gelöscht werden“) und dem User sagen. Mit `device_bash` Löschrecht einmal per `device_request_delete_permission` anfragen, vorher sichern.
+  - Programme auf dem Rechner starten (z. B. `npm run dev` auf `dev_port`): per Computer-Use eine `.bat` im Explorer doppelklicken. Terminals lassen sich per Computer-Use nicht beschreiben.
+- Fehlt etwas Wichtiges, einmal sagen, was es kostet, und weitermachen.
+
+Aufgabenliste (TaskCreate) mit den Phasen anlegen. Letzter Punkt immer „Prüfen“.
+
+---
+
+## 2 · Fragen (immer über AskUserQuestion)
+
+Regeln:
+- Jede Frage über **AskUserQuestion**, max. 4 Fragen pro Aufruf, 2 bis 4 Optionen, empfohlene Option zuerst mit „(Empfohlen)“.
+- Farben und Schriften mit `preview` zeigen (Hex-Werte, Probezeile in der Schrift).
+- Freitext (Kontaktdaten, Preise, Texte) über „Other“ oder aus dem Steckbrief. Was im Steckbrief steht, nicht nochmal fragen.
+- **Nichts erfinden**: keine Kontaktdaten, Preise, Referenzen, Zahlen. Fehlt etwas: ❓ in `Projekt.md` unter „Offen“ und im Code `sichtbar: false`.
+- Reihenfolge einhalten. Frühe Antworten können spätere Arbeit kippen (SMTN: Sitemap neu, weil die Checkout-Frage zu spät kam).
+- Antwortet der User mit „entscheide du“: entscheiden, Grund in einem Satz nennen, in „Entscheidungen“ festhalten.
+- **Ohne Rückfragen** („nichts fragen“, User unterwegs, geplanter Lauf, AskUserQuestion nicht verfügbar): nicht stehen bleiben. Was im Steckbrief oder in `einstellungen.json` steht, gilt. Für den Rest die empfohlene Option (bei Stilrichtung: die Branchen-Zeile aus Abschnitt 5, bei Bewegung „ruhig gleiten“, bei Hosting der Standard). Jede so getroffene Wahl in „Entscheidungen“ mit „Empfehlung übernommen, nicht bestätigt“ und in der Antwort kurz auflisten. Nichts erfinden bleibt trotzdem: fehlende Fakten werden ❓, keine Annahme. Farben, Schrift und Hero-Richtung erst mit den Entwürfen bestätigen lassen. Was nach außen geht oder sich nicht zurücknehmen lässt (Vertrag oder Rechnung an den Kunden schicken, Zahlungen auslösen, Löschen), nie ohne den User. Eintragen, was der User selbst gemeldet hat (3.3), und Rechnungen als Datei vorbereiten ist erlaubt.
+- Status im Blatt Projekte: Anfrage (noch kein Preis) → Angebot (Preis steht, nicht unterschrieben) → Vertrag → In Arbeit → Abnahme → Live.
+
+### Runde 1 · Grundlagen
+1. **Für wen?** Kunde bezahlt / Kunde unentgeltlich / eigene Website
+2. Projekt- bzw. Kundenname (wird Ordnername) und was er macht, in einem Satz
+3. Fließt Geld über die Seite? nein, nur Anfrage / Verkauf extern (BeatStars, Etsy, Calendly …) / eigener Shop
+4. Rechtsraum: Österreich / Deutschland / Schweiz
+
+### Runde 2 · Inhalte und Beweise
+5. Angebote mit Preisen („ab“-Preise ok, Firmensachen „auf Anfrage“)
+6. Echte Referenzen? Je: bezahlt? fremder Kunde? darf gezeigt werden? Datei da? Bei Portfolios: welche eigenen Projekte (GitHub-Links, Apps, Konzepte). Konzepte klar als „Konzept“ kennzeichnen.
+7. Assets: Logo (Format! PNG aus Instagram = nachbauen), Fotos, Texte (wer schreibt), Domain, E-Mail
+8. Referenzseiten, je: **Struktur-Vorbild oder Stimmungs-Vorbild?** Screenshots, die der User schickt, genau ansehen: daraus kommen die meisten Wünsche (Cursor-Effekt, Objekt in der Mitte, Glas, Schrift).
+
+### Runde 3 · Richtung
+9. Stilrichtung (Abschnitt 5, passend zur Branche, max. 4 Optionen)
+10. Farben: 3 konkrete Paletten mit `preview` (Hex + Kontrast) plus „eigene“
+11. Schrift: 3 Kandidaten mit `preview` (gleiche Probezeile: Name + ein Preis)
+12. Bewegung: hart rein, sofort stehen / ruhig gleiten / gestaffelt aufbauen / kaum Bewegung
+
+### Runde 4 · Leitmotiv, 3D und Ton
+13. Leitmotiv: ein Gegenstand oder eine Idee, die durch die ganze Seite trägt (SMTN: die **Kette**. Onur-Portfolio: **Bildschirm wird Welt**, Haus → Fenster → Laptop → Welt im Bildschirm). 3 Vorschläge aus der Branche, nichts Generisches wie „Wellen“. Zu jedem Vorschlag gleich sagen, was er **bedeutet** (SMTN: Ketten sperren die Beats weg, Scrollen bricht sie auf).
+14. Was entsteht in 3D? (Mehrfachauswahl) Welt aus dem Logo (Flächen oder Partikel ordnen sich pro Abschnitt neu, man fliegt hindurch; leicht, erzählt die Marke; Empfohlen, wenn es ein Logo gibt) / Begehbare Echtzeit-Szene (Blender gebaut, Three.js) / Hero-Sequenz zum Scrollen (Bildfolge) / Logo als 3D-Render / Objekt zum Anfassen (Three.js + Rapier) / nichts. Zu jeder Wahl sagen, was sie für die Kunden der Seite bedeutet und wie schwer sie ist.
+15. Vorhandene .blend-Dateien? Pfad. Sollen Assets aus freien Quellen (Poly Haven, CC0) rein? (Empfohlen bei Echtzeit-Szenen)
+16. Ton? nein / mit Ton-Frage „Mit Ton / Ohne Ton“ als kleine Leiste, die nichts sperrt (alles selbst im Browser erzeugt, keine Lizenzen)
+
+### Runde 5 · Technik und Ablage
+17. Texte selbst ändern? Sanity-Studio (Empfohlen bei Kunden) / statisch
+18. Formular: Senden mit einem Klick über Resend plus Bestätigung an den Kunden (Empfohlen; bei statischem Export als kleiner Dienst neben der Seite, Abschnitt 9) / nur E-Mail-Link / Buchungstool. Die Mail-Adresse steht immer zusätzlich sichtbar da. Ein Resend-Konto reicht für alle Projekte: pro Projekt eine Domain bestätigen und einen eigenen Schlüssel (nur „Sending access“, nur diese Domain).
+19. Hosting: Hetzner / Vercel / vorhanden
+20. **Wo soll der Website-Code hin?** Standard aus `code_ordner` zuerst mit „(Empfohlen)“: im Projektordner unter `website` / im Code-Ordner des Users unter `<Name>` / anderer Pfad
+21. Deadline und Stunden pro Woche
+22. Notion-Seite anlegen? ja (Empfohlen bei Kunden) / nein
+
+Bei „Kunde bezahlt“ zusätzlich: vereinbarter Preis, Anzahlung (%), Korrekturrunden, Stundensatz für Extras.
+
+Danach alles in 8 bis 10 Zeilen zusammenfassen und bestätigen lassen („Passt so“ / „Ich korrigiere was“).
+
+---
+
+## 3 · Ordner, Geld, Vertrag, Rechnung (Hauptordner)
+
+```
+<Hauptordner>/
+├── Finanzdokumentation.xlsx     Übersicht · Anleitung · Projekte · Einnahmen · Ausgaben
+├── Vertragvorlage.docx          {{PLATZHALTER}}, gelb markiert
+├── Rechnungsvorlage.docx        {{PLATZHALTER}}, gelb markiert
+├── Prompt.txt                   Steckbrief + Kurzanleitung für den User
+├── _werkzeuge/
+│   ├── vorlage_ausfuellen.py    Word-Vorlage + JSON → fertiges .docx
+│   ├── finanzen_eintragen.py    Zeilen eintragen / Status ändern / nächste Rechnungsnr., Formeln bleiben heil
+│   ├── meine-daten.json         Daten des Users (Name, Adresse, IBAN, USt-Hinweis …)
+│   └── einstellungen.json       Pfade und Vorlieben (Abschnitt 1.1)
+├── _skills/                     Kopie der Skills, Versionen, Lernliste (Abschnitt 11)
+├── Kunden/
+│   ├── Kundenvorlage/           wird für jeden Kunden kopiert
+│   │   ├── Projekt.md  Vertrag/  Rechnungen/  Belege/  Vom Kunden/  Notizen/
+│   └── <Kunde>/
+└── Eigene Projekte/<Name>/      gleicher Aufbau, ohne Vertrag
+```
+
+### 3.1 Projekt anlegen
+1. `Kunden/Kundenvorlage` nach `Kunden/<Name>/` kopieren (bei eigener Website nach `Eigene Projekte/<Name>/`, ohne `Vertrag/`). Ordnername ohne Umlaute und Leerzeichen-Probleme, z. B. `Baeckerei-Huber`.
+2. `Projekt.md` ausfüllen: alle Antworten aus Abschnitt 2, Code-Ordner, Status, erster Eintrag im Verlauf. Zielgruppe mit 3 bis 4 konkreten Kundentypen festhalten (für die simulierten Kunden in 10.1).
+3. Dateien, die der Kunde geschickt hat, nach `Vom Kunden/`.
+4. Zeile auf dem Blatt **Projekte** in `Finanzdokumentation.xlsx` (über `finanzen_eintragen.py`): Projekt, Typ, Ansprechpartner, Start, Status, vereinbarter Preis, Ordnerpfad.
+
+### 3.2 Projekt.md aktuell halten
+Bei jedem Schritt (Vertrag, Rechnung, Zahlung, Design-Freigabe, Livegang, Änderungsrunde) eine Zeile unter „Verlauf“ mit Datum, „Stand“ oben neu schreiben, „Geld“-Kurzstand aktualisieren, Status in Projekt.md **und** im Blatt Projekte gleich halten. Jede Richtungsentscheidung als Zeile in der Tabelle „Entscheidungen“ (Datum, Was, Warum).
+
+### 3.3 Geld eintragen
+- Alles läuft über `python _werkzeuge/finanzen_eintragen.py Finanzdokumentation.xlsx <Blatt> --zeile '<JSON-Liste>'` (nie die xlsx von Hand neu schreiben, sonst gehen Formeln und Auswahllisten verloren). Stand lesen: `--liste <Blatt> --projekt <Name>`.
+- Einnahme: `[Datum, Projekt, Beschreibung, Rechnungsnr., Betrag, "offen"|"bezahlt", Bezahlt am]` aufs Blatt **Einnahmen**.
+- Zahlung kommt rein: `finanzen_eintragen.py <xlsx> Einnahmen --setze <Rechnungsnr.> Status bezahlt` (setzt „Bezahlt am“ automatisch auf heute, wenn leer).
+- Ausgabe: `[Datum, Projekt|"Allgemein", Kategorie, Beschreibung, Betrag, Rhythmus, "ja"|"nein", Belegpfad]` aufs Blatt **Ausgaben**. „ja“ in Spalte 7, wenn der Kunde es zurückzahlt (z. B. Domain vorgestreckt). Beleg nach `Belege/`.
+- Kategorien: Domain, Hosting/Server, E-Mail, Software/Abo, Lizenz (Schrift/Asset), Hardware, Werbung, Sonstiges. Rhythmus: einmalig, monatlich, jährlich.
+- Projektname exakt wie im Blatt Projekte, sonst zählt die Übersicht nicht.
+- Nach dem Eintragen kurz sagen: was eingetragen wurde und der neue Stand des Projekts (bezahlt, offen, Ausgaben).
+- Beträge, die der User nicht genannt hat, nie schätzen. Nachfragen; ohne Rückfragen nicht eintragen, sondern als ❓ in `Projekt.md` unter „Offen“ und in der Antwort nennen.
+
+### 3.4 Vertrag (nur bei Kunden)
+1. `meine-daten.json` lesen. Leere Felder einmal abfragen und dort speichern.
+2. Werte-JSON bauen: `PROJEKT, KUNDE_NAME, KUNDE_FIRMA, KUNDE_ADRESSE, KUNDE_EMAIL, LEISTUNGEN` (Zeilen mit `\n`), `NICHT_ENTHALTEN, KORREKTURRUNDEN, TERMIN_INHALTE, TERMIN_DESIGN, TERMIN_LAUNCH, VERGUETUNG, ABNAHMEFRIST` (Standard „7 Tagen“), `HOSTING, DOMAIN_INHABER, WARTUNG, GERICHTSSTAND, ORT, DATUM` plus die Felder aus `meine-daten.json`.
+   - `VERGUETUNG` bezahlt: „Pauschal [Preis] €. [Anzahlung] % bei Unterschrift, Rest bei Abnahme, zahlbar binnen 14 Tagen. Zusätzliche Leistungen [Stundensatz] € pro Stunde nach vorheriger Absprache.“
+   - `VERGUETUNG` unentgeltlich: „Die Leistung ist unentgeltlich.“
+   - `DOMAIN_INHABER` Standard: „Domain und alle Konten (Hosting, CMS, Mail) laufen auf den Auftraggeber oder werden ihm bei Projektende übertragen.“
+   - `WARTUNG` Standard: „30 Tage nach Livegang behebt der Auftragnehmer Fehler kostenlos. Danach nach Aufwand oder als Wartungspaket nach gesonderter Vereinbarung.“
+3. `python _werkzeuge/vorlage_ausfuellen.py Vertragvorlage.docx Kunden/<Name>/Vertrag/Vertrag-<Name>-<JJJJ-MM-TT>.docx werte.json`. Das Skript meldet, was noch offen ist; offene Stellen bleiben gelb.
+4. Zusätzlich als PDF (in der Cloud mit LibreOffice `soffice --headless --convert-to pdf`), als Bild rendern und ansehen, beides in `Vertrag/` ablegen und dem User schicken.
+5. Hinweis an den User, einmal: Vorlage, keine Rechtsberatung, erste Version prüfen lassen (AT: WKO).
+6. Unentgeltlich trotzdem Vertrag anbieten (regelt Domain, Hosting, Zugriff, Portfolio-Recht). SMTN-Lehre: „Ich hoste gratis“ macht dich zum Auftragsverarbeiter.
+
+### 3.5 Rechnung
+1. Nächste Rechnungsnummer: höchste Nummer des laufenden Jahres im Blatt Einnahmen + 1, Format `JJJJ-NNN`, fortlaufend über alle Kunden (`finanzen_eintragen.py <xlsx> --naechste-rechnungsnr`).
+2. Werte: `RECHNUNGSNR, DATUM, LEISTUNGSZEITRAUM, PROJEKT, POS1..5_BESCHREIBUNG/MENGE/BETRAG (ältere Vorlagen: bis 3), SUMME, ZAHLUNGSZIEL` (Standard: Datum + 14 Tage), Kundendaten, `KUNDE_UID`, plus `meine-daten.json`. Im Werte-JSON gilt: `null` löscht die ganze Zeile bzw. den Absatz (ungenutzte Positionen wie `POS4_*`, `POS5_*`, fehlende `KUNDE_UID`), leerer Text `""` lässt nur den Platzhalter verschwinden (z. B. `KUNDE_FIRMA` bei Privatkunden). Das gilt genauso für den Vertrag.
+3. Ausfüllen nach `Rechnungen/Rechnung-<Nr>.docx`, PDF dazu, als Bild ansehen (eine Seite, keine gelben Reste). Die Werte-JSON daneben als `werte-<Nr>.json` ablegen.
+   - **Schlussrechnung** immer so: Pauschale laut Vertrag, darunter „abzüglich Anzahlung (Rechnung <Nr>)“ als Minusbetrag, dann jede Weiterverrechnung (Ausgaben mit „ja“) als eigene Position. So sieht der Kunde, wie der Rest zustande kommt.
+   - Die mitgelieferte Vorlage hat 5 Positionen, ältere Vorlagen des Users oft nur 3 (vorher nachsehen, welche `POS*` drin sind). Reichen sie nicht, Weiterverrechnungen zu einer Position zusammenfassen und die Einzelteile in die Beschreibung schreiben. Positionstexte kurz halten, sonst rutscht die Rechnung auf Seite 2.
+4. Sofort Zeile im Blatt Einnahmen mit Status „offen“.
+
+---
+
+## 4 · Notion (wenn gewünscht)
+
+Elternseite „Kunden“ suchen, sonst einmal fragen, ob anlegen. Pro Projekt `<Name> — Website Projekt`, menschlich gepflegt (keine Emoji-Flut, keine gestapelten Revisionsblöcke, aktueller Stand statt Historie). Unterseiten: Stand (größtes Problem oben) · Das Projekt · Was der Kunde geliefert hat (unverändert) · Struktur (Sitemap mit Herleitung) · Design (Tokens, Schrift, Leitmotiv, Bewegungsregel, Design-Rationale: Element, Entscheidung, Prinzip, Grund) · Inhalte · Technik (Env-Namen, nie Werte) · Recht · Offen. Vertrag und Geld liegen im Ordner, Notion verlinkt nur darauf. Link in `Projekt.md` eintragen.
+
+---
+
+## 5 · Stilrichtungen
+
+Die Regeln der gewählten Richtung kommen ins Code-Repo als `CLAUDE.md` und `.cursor/rules/design.mdc`, damit sie jede Runde gelten. Neue Verbote des Users sofort dort nachtragen.
+
+**Grundlage für jede Richtung: der Taste Skill** (Abschnitt 5.1). Seine Hausregeln gelten zusätzlich zur Richtung. Widerspricht eine Richtung unten einer Hausregel (z. B. Glas, Mono-Labels, Verläufe), gilt die Hausregel, außer der User will es ausdrücklich anders; dann in `CLAUDE.md` mit Grund festhalten und die Zeile mit `taste-skill-ignore` markieren.
+
+| Richtung | Passt zu | Harte Regeln |
+| --- | --- | --- |
+| **Brutalistisch roh** (SMTN) | Musik, Streetwear, Kunst, Clubs | Material zeigen statt verkleiden. 0 px Rundung, keine Verläufe, keine Schatten, kein Blur, Hover schaltet hart, Links unterstrichen, Knöpfe wie echte HTML-Knöpfe (2 px Rahmen), Grain auf jeder Fläche, Schlagzeilen dürfen aus dem Bild laufen, harte Farbkanten zwischen Sektionen |
+| **Kino-Nacht** (Onur-Portfolio, Agentur-Seite) | Entwickler, 3D, Kreative, Studios, Agenturen | Dunkle Echtzeit-Szene ist der Star, wenig Text darüber. Leichtes Röhren-Rauschen nur in Übergängen, keine Vignette (macht oben „zu dunkel“). Große Grotesk fett, Text in derselben Familie oder einer zweiten Sans (keine Mono). Ein warmer Akzent füllt die eine Aktion und ist das Licht in der Szene. Knöpfe flach und rund, Flächen in Tonstufen statt Glas. Szene hinter Text dimmen |
+| **Editorial ruhig** | Architektur, Fotografie, Galerie, Luxus | Viel Weißraum, eine Serifenschrift groß, Raster über Ausrichtung statt Linien, lange weiche Bewegungen, Bilder groß und randlos |
+| **Technisch präzise** | Software, Ingenieure, Agenturen | Mono für Zahlen, sichtbares Raster, gestaffelter Aufbau, Daten in echten Tabellen |
+| **Handwerk warm** | Gastro, Handwerk, Manufaktur | Echte Fotos vom Ort, kräftige Grotesk oder Slab, Papiertöne, Materialtexturen aus Blender (Holz, Stein, Metall) |
+
+Immer: **max. 4 Farben** (Grund, Papier, Akzent, gedämpft; dazu 2 bis 3 Tonstufen des Grunds für Flächen), **max. 2 Schriftfamilien**, lokal über `@fontsource` oder `next/font/local` (kein Google-Fonts-Server). Der Akzent bekommt eine Regel, wo er auftaucht **und wo nicht**. Text auf dunklem Grund nie schwarz oder dunkelgrau (SMTN Runde 37). Kontrast WCAG AA.
+
+### 5.1 Taste Skill (Pflicht für jede öffentliche Seite)
+Der Taste Skill (tasteskill.dev, MIT, Repo `Leonxlnx/taste-skill`, Skill `design-taste-frontend`) ist ein Anti-Slop-Rahmen mit Skripten, die die Seite messen statt sie zu glauben. Er ersetzt nicht diesen Skill, sondern ist sein Design-Gate.
+- **Holen**: ist er nicht installiert, `npx skills add https://github.com/Leonxlnx/taste-skill --skill "design-taste-frontend"` (oder `git clone` in den Arbeitsordner). Braucht Node 22+ und Chrome/Chromium. In der Cloud als root braucht Chrome `--no-sandbox`: kleines Skript `chrome-nosandbox.sh` (`exec <chromium> --no-sandbox "$@"`) und `CHROME_PATH` darauf setzen. Seine `SKILL.md` einmal ganz lesen (Ablauf in 10 Schritten, Hausregeln, Gesetze des Handwerks).
+- **Richtung**: bei neuen Projekten nach Runde 3 der Fragen `draw.mjs --sector <branche> --brief "<ein Satz>" --options` laufen lassen und die drei gezogenen Richtungen zusammen mit Abschnitt 5 als Hero-Entwürfe zeigen (Abschnitt 6.4). Bei bestehenden Seiten mit festen Farben und Schriften `--keep palette,type`.
+- **Hausregeln, die am häufigsten verletzt werden** (alle aus dem echten Lauf auf der Agentur-Seite):
+  - Keine Eyebrows: kein kleines Label über einer Überschrift („Arbeiten“ über „Bringt mir das Kunden?“, „Onur & Maurice, Frastanz“ über dem h1). Was es sagt, in die Zeile unter der Überschrift.
+  - Keine Monospace, keine winzigen Großbuchstaben-Labels mit Sperrung, kein hervorgehobenes Wort (dünn/kursiv/farbig) in Überschriften, höchstens 2 Schriften, nichts unter 13 px.
+  - Keine Verläufe, keine Schatten in Ruhe, kein Glas/Backdrop-Blur, keine dünnen Trennlinien (auch nicht `border-t` zwischen Listenpunkten): Abstand und Tonstufen trennen. Formularfelder gefüllt, Fokus = heller Rand.
+  - Flache Knöpfe, der Akzent füllt nur die eine Aktion (`knopf-haupt`). Keine pulsierenden Dauer-Animationen.
+  - Genau ein h1, **im ersten Bild sichtbar** (kein Tor/Vorhang davor, kein Preloader, kein Warten auf das Laden). Überschriften höchstens 2 Zeilen auf jeder Breite.
+  - Mit `prefers-reduced-motion` ist die Seite fertig: versteckte Startzustände nur in `@media (prefers-reduced-motion: no-preference)`. Einblende-Komponenten (`Gleiten`) starten **sichtbar** und verstecken nur, was beim Laden unter dem Bild liegt; sonst zählt das Gate die Abschnitte als leere Bildschirme (`empty-screens`, `blank-gap`) und ohne JS ist die Seite leer.
+  - Keine Emojis im Code, den der Linter sieht (auch `❓` in Kommentaren): als „OFFEN:“ schreiben, in `Projekt.md` darf ❓ bleiben.
+- **Gate** (vor jeder Abgabe, nach jeder größeren Runde): `node <taste>/scripts/lint.mjs src` → 0 FAIL. Dann Produktions-Build servieren und `node <taste>/scripts/inspect.mjs http://127.0.0.1:<port>/ --out <ordner>` → 0 FAIL bei 1440/768/390, Bilder ansehen. Bei Scroll-Szenen zusätzlich `scenes.mjs`. WARNs beheben oder in der Runden-Notiz in einem Satz begründen (z. B. „Text liegt über der 3D-Welt: die Welt ist das Bild, Flächen sitzen neben dem Text“). Mit WebGL dauert `inspect.mjs` mehrere Minuten: im Hintergrund laufen lassen. Zwei bekannte Fehlalarme mit Ausweg: (1) Bedienteile wie ein Preis-Beleg bekommen `data-ui` (sonst gilt jede kleine Zeile über der Summe als Eyebrow). (2) Bei WebGL-Seiten sieht das Gate die Leinwand nicht und meldet die Flugstrecken als `empty-screens`: erst mit WebGL-Screenshots belegen, dass dort die Welt zu sehen ist, dann `--allow empty-screens` und den Grund in die Runden-Notiz.
+- Was der Taste Skill **nicht** entscheidet: Inhalte, Preise, Kundensicht, Rechtliches, 3D-Bedeutung. Dafür gilt weiter dieser Skill.
+
+---
+
+## 6 · Konzept, bevor Code entsteht
+
+1. **Sitemap aus Anforderungen**: Bezahlvorgang → eigene Route. Formular mit Upload → eigene Route. Impressum, Datenschutz immer eigene Routen. Sonst Startseite als Scroll-Geschichte plus nur zwingende Routen. Warenkorb, Player, Modals sind keine Seiten.
+2. **Geschichte der Startseite**: Hero (wer, was) → Beweis (Arbeit hörbar/sichtbar) → Angebot mit Preisen → Person dahinter (echtes Foto) → Ablauf („Du schickst X, ich melde mich in 24 h, du bekommst Y“) → Kontakt → Footer. Reihenfolge aus dem Geschäftsziel. Bei Entwicklern zusätzlich ein Abschnitt **Stack** (alle Techniken in Gruppen, als Wörter, keine Logo-Wand).
+3. **Leitmotiv**: Jede große Bewegung erzählt es. Was es nicht erzählt, fliegt raus. Bei 3D-Szenen: die Kamerafahrt **ist** die Geschichte (jede Seiten-Sektion = eine Kamerastation).
+4. **Drei Hero-Richtungen** als schnelle Entwürfe (statisches HTML oder kleine Three.js-Skizze), in Playwright bei 1440×900 und 390×844 fotografieren, zeigen, per AskUserQuestion wählen lassen. Erst dann weiter.
+5. Konzept in Notion „Design“ bzw. `Projekt.md` unter „Entscheidungen“ festhalten.
+
+---
+
+## 7 · Anti-Slop-Regeln (aus den Korrekturen des Users)
+
+Das Wichtigste im Skill. Jeder Punkt wurde vom User mindestens einmal beanstandet.
+
+**Text**
+- Spezifitätstest: Jeder Satz, der genauso auf einer anderen Seite der Branche stehen könnte, wird konkreter oder fliegt raus. („Hochwertige Musik für Ihre Marke“ ✗ · „Trailer-Score, 45 Sekunden, in drei Tagen“ ✓)
+- Keine Hinweis-, Unter- oder Meta-Zeilen, die keiner verlangt hat („No sample packs“, „Answer within…“, „Get in touch“).
+- Keine Prahl-Sprüche über die Arbeitsweise („von Hand programmiert“, „mit Liebe gemacht“). Zeigen statt behaupten. (Portfolio Runde 2)
+- Vorteile für den Kunden in seinen Worten: CMS heißt „Du änderst Texte, Bilder und Preise selbst, wann du willst, ohne mir jedes Mal schreiben zu müssen“, nicht „Sanity-CMS integriert“. (Portfolio Runde 2)
+- Keine dekorativen Zeichen im sichtbaren Text: kein `·`, kein `→`/`←`, keine Slash-Ketten, keine Gedanken- oder Bindestriche als Stilmittel. Layout trennt, nicht Zeichen. Auch keine Punkte als Trenner zwischen Werten (BPM, Tonart): Abstand statt Zeichen (SMTN Runde 59).
+- Keine nummerierten Sektionslabels („01 / ABOUT“), keine Zähler („02 / 08“). Ausnahmen: echte Kennungen und der Wegweiser in Seitwärts-Strecken (siehe „Verkaufen“).
+- Knöpfe sagen die Aktion („Kaufen“, „Abschicken“, „Mail schreiben“), nicht „Mehr erfahren“, „Get started“.
+- Zielgruppe nicht einengen („man muss nicht Artist sein“).
+- Nichts erfinden: keine Testimonials, keine Logo-Wand, keine „500+ Kunden“, keine Platzhalter live.
+- Fotos von Personen (Team, Inhaber): erst alle ansehen, dann wenige wählen. Fremde Personen, Pappaufsteller, fremde Logos und Handy-Oberflächen rausschneiden; geht das nicht, Foto nicht nehmen. Wer wer ist, nie raten, sonst fragen. Einzelporträts möglichst vom selben Ort oder Licht, damit sie wie ein Paar wirken, dazu ein gemeinsames Bild. Leicht an die Farben der Seite angleichen, nicht verfremden. Alt-Text beschreibt nur Sichtbares (nicht „am Lünersee“, wenn der Ort nicht feststeht).
+- Seiten von mehreren Leuten: „wir“ überall, auch in Rechner, Datenschutz und Mail-Vorlage. Profile, die nur einer Person gehören, am Knopf benennen („Onurs GitHub“). Verantwortlich im Impressum und Datenschutz ist, wer abrechnet; dass beide Anfragen lesen, steht offen im Datenschutz.
+- Auch nichts über die Arbeit behaupten, was man nicht weiß: „Original beats, no loop kits“ ✗ („vlt verwendet er ja loop kits, das können wir nicht wissen“, SMTN Runde 60). Nur zeigen, was nachprüfbar auf dem Bildschirm passiert (Anzahl, Preis, abspielbar).
+- Kleine Texte liest keiner („eig liest sich niemand wirklich diesen kleinen Texte durch“, SMTN Runde 57). Wenige, große Sätze; was klein ist, muss eine Handlung sein (Preis, Knopf), keine Erklärung.
+- **Kurz schreiben, vom ersten Wurf an** („zu viel text“, „texte sind irwie viel zu lang“, Agentur-Seite R17). Grenzen als Unit-Test („Kurze Texte“): Einleitung ein Satz ≤ 90 Zeichen, Punkte und Schritte ≤ 60 bis 70 Zeichen, Überschriften 2 Zeilen à ≤ 24 Zeichen, pro Arbeit unter dem Bild nur Branche, Titel, **ein** Satz Ergebnis, Knopf. Ausgangslage und Umsetzung gehören auf die eigene Projektseite. ✗ „Wir stellen eure Seite auf unseren eigenen Server in Europa und halten sie aktuell und sicher, mit Backups. Mit Hosting & Pflege um 19 € im Monat.“ ✓ „Server in Europa, Updates, Backups. 19 € im Monat.“
+- **Kundensicht** bei Seiten, die Kunden gewinnen sollen (Agentur, Dienstleister): jede Abschnitts-Überschrift ist eine Frage des Kunden („Bringt mir das Kunden?“, „Was kostet das?“, „Wie lange dauert das?“, „Wie fangen wir an?“), „ihr/euch“, kein Fachjargon, keine Technik-Logos. Kein Zeitversprechen, das man nicht halten kann; der Termin steht im Angebot.
+
+**Verkaufen** (SMTN Runde 56 bis 61: „du musst immer profitabel denken“)
+- Jede Fläche führt zum Kauf oder zur Anfrage. Preis direkt am Kaufknopf („Buy $30“, nicht „Buy on BeatStars“).
+- Der Katalog ist immer einen Klick entfernt: fester Link oben neben dem Menü mit Anzahl („All beats 18 →“), im Menü als erstes Feld in Akzentfarbe, im Footer zuerst.
+- Was man anklicken kann, muss sich ankündigen. Große klickbare Flächen bekommen ein Zeiger-Label („View 12 beats“), Seitwärts-Strecken einen Wegweiser (Fortschrittslinie plus „02 / 06 →“). Das ist die einzige erlaubte Zähler-Ausnahme, weil sonst keiner merkt, dass es weitergeht („nicht jeder checkt, dass man rausklicken muss“).
+- Das Leitmotiv braucht eine Bedeutung, die man ohne Erklärung versteht (SMTN: die Ketten sperren die Beats weg, unten links „18 beats / Locked.“ mit Schloss, nach dem Riss „Unlocked.“). Dekoration ohne Bedeutung fliegt raus („die chains müssen eine Bedeutung bekommen“).
+- Kein „Surprise me“ oder Zufallsknopf ohne klaren Nutzen.
+
+**Gestaltung**
+- Keine Stat-Reihen als Deko (große Zahl über Winzlabel). Feld-Wert-Paare in eine `<table>`. Ausnahme: echte, nachprüfbare Zahlen, die zum Kauf führen, jede Zelle ein Link (SMTN About: Anzahl Beats → Katalog, Preis ab → Katalog, Custom → Formular). Zahlen, die hochzählen, im Endzustand prüfen.
+- Kein Baukasten-Look: keine lila Verläufe, keine Emoji-Icons, keine Stockfotos, keine drei gleichen Feature-Karten.
+- Kein Glas (Taste-Hausregel, seit v6). Wünscht der User ausdrücklich Glas, nur für Knöpfe, mit `taste-skill-ignore` und Grund in `CLAUDE.md`. Nie milchige Textflächen.
+- Keine Sektion sieht aus wie die andere. Kein gemeinsames „Überschrift links, Kasten rechts“-Gerüst (SMTN: `SectionPanel` machte alles austauschbar). Jede Sektion ist ein **Gegenstand**, den man bedient (Plattenkiste, Auftragsschein, Plakat, Kartenring).
+- Arbeiten/Projekte als **bewegte Loops** zeigen (kurze stumme Videos, wie GIFs), nicht als Einzel-Screenshots. Präsentation, die mit jedem Projekt voller wird (Ring/Bogen wie emotion-agency). (Portfolio Runde 2)
+- **Websites muss man sehen** („man sieht gefühlt nix von den websiten“, Agentur-Seite R17): Websites im **Querformat 16:10 in einem schlichten Browserfenster** (Adressleiste mit der echten Adresse, sonst nur der Name, nie eine erfundene Domain), so groß wie die Bildschirmhöhe erlaubt (`kw` aus `innerHeight`). Hochformat-Karten mit `object-cover` schneiden Websites bis zur Unkenntlichkeit. Loops 960 × 600, webm ≤ 400 KB, nur die nahen Karten laden vor (`preload` sonst `none`).
+- Text nicht einengen. Gequetschte Blöcke nebeneinander → untereinander und größer. Freie Fläche nutzen statt kleine Inhalte in die Ecke („so wie du den Platz genutzt hast, ist richtig arsch“).
+- Raster ohne Lücken: Spaltenzahl = Anzahl der Einträge, kein leeres Feld am Rand („ganz rechts ist einfach so leeres Feld“). Impressum und Datenschutz in eine eigene kleine Zeile, nicht in einer Linie mit den Kontakten. Kontakte mit Icons (Mail, Instagram, Shop).
+- Trennlinien in Zahlenfeldern müssen schließen (senkrechte Striche oben und unten bündig).
+- Ein Play-Knopf ist **ein** Icon, das zwischen Play und Pause wechselt, nie zwei Knöpfe nebeneinander. Im Player gehört das Cover dazu (Cover ist der Play-Knopf).
+- Laufbänder („Marquee“) hinter dem Inhalt wirken billig: weglassen.
+- „Nur 1 Bild“ heißt ein Bild. Keine Unterstreichungen als Deko.
+- Was wie ein Knopf aussieht, wird angeklickt: Status („Geht bald online“, „In Arbeit“) nie als Pille mit Rahmen, sondern Punkt plus Text. 3 von 4 simulierten Kunden klickten die Pille (Portfolio Prüfung).
+- Spielereien (Lampenschalter) nicht in dieselbe Reihe wie Kontaktwege (Mail, Telefon). Eigene Zeile mit Abstand, sonst fragt jeder „wozu?“.
+- Bilder klein halten („die bilder haben voll lange gebraucht zum laden“, R17): jedes Foto in den Größen, in denen es gezeigt wird (z. B. 96 für Avatare, 480 für Karten, 800 für große Bilder, WebP q80) mit `srcSet`/`sizes`. Nie ein 1200-px-Foto in einen 48-px-Kreis.
+- Feste Kopfzeile: oben ganz durchsichtig, erst beim Scrollen eine flache, fast deckende Leiste (Grundfarbe ~92 %). Ein dunkler Verlauf über dem Hero machte die Seite „oben zu dunkel“ (Agentur-Seite R17) und ist ohnehin verboten. Mit 3D fotografieren, ohne 3D fällt es nicht auf.
+- Listen von Schritten in **einem** Schnitt (alle fett). Abwechselnd fett und dünn liest jeder als Fehler (Portfolio Ablauf, 4 von 4).
+- Am Handy müssen alle Reiter einer Reiterzeile in eine Zeile passen (kleiner, ohne Punkt). Ein angeschnittener letzter Reiter („Sam…“) wirkt kaputt, auch wenn die Zeile wischbar ist.
+
+**Bewegung und Interaktion**
+- Weniger ist mehr. Bei SMTN flogen Buchstaben-Mischen, Wort-für-Wort-Einblenden und gestaffelte Einblendungen in Formular und Footer raus. Es bleibt nur, was die Geschichte erzählt.
+- Spielereien, die man ziehen oder erst verstehen muss (z. B. eine Lampenschnur zum Ziehen), kommen nicht gut an („richtig arsch“, Portfolio Runde 4). Lieber ein vertrautes Bedienelement im Stil der Seite (Schalter) und die Wirkung in der Szene zeigen.
+- Mauszeiger: kein Ball, kein Kreis. Eine weiche Spur (Aura) und Objekte, die in der Nähe **sanft** ausweichen und kreisen. Kein großes Loch, das die Maus in eine Form reißt. (Portfolio Runde 2 und 4)
+- Effekte nur dort, wo sie in die Geschichte gehören (Portfolio: Partikel erst, wenn man im Bildschirm ist, nicht schon draußen am Haus).
+- Standard: kein Auto-Scroll, kein Abfangen des Mausrads, kein `window.scrollTo` im Renderloop. Gepinnte Sektionen nur, wo sie erzählen. In Formularen und auf Rechtsseiten keine Scroll-Effekte.
+- Ausnahme, wenn der User es will (SMTN Runde 56 bis 60: „Bereiche ohne Informationen mit Autoscroll skippen“): leere Strecken fährt die Seite allein durch. Dann gilt: erst auslösen, wenn der User ein Stück in den Bereich hineingescrollt hat, nie sofort am Anfang („es soll nicht gleich am Anfang das Autoscroll übernehmen“) · eine Fahrt zur Zeit (`driveTo`, Lenis gesperrt) · nie bei Sprüngen (Menü, Anker, Zurück): nur auslösen, wenn der Scrollschritt klein ist · Schwung, der von außen kommt, nicht abfangen (sonst „stoppt es kurz“ vor der nächsten Sektion).
+- Ein Übergangsmotiv für alles: Menü öffnen, Seitensprünge und Bereichswechsel nutzen denselben Effekt (SMTN: Papierriss mit echter Risskante, Ziel-Name kurz groß darauf). Nicht drei verschiedene Wischer.
+- Bildsequenzen dürfen vorladen, aber der Titel steht trotzdem im ersten Bild. Kein Vorhang/Tor, der die Seite sperrt: eine Ton-Frage („Mit Ton oder ohne?“) ist eine kleine Leiste unten, Scrollen beantwortet sie mit „ohne“ (Taste-Gate: `no-title`, `late-title`).
+- Hoch genauso sauber wie runter. Immer beide Richtungen testen.
+- Jede Spielerei hat einen normalen zweiten Weg (Schloss abreißen → daneben Knopf „aufsperren“).
+- `prefers-reduced-motion`: Endzustand, nie leere Fläche.
+
+**3D-Szenen**
+- **Die Szene braucht eine Bedeutung für die Kunden der Seite, nicht nur für uns.** Fragt der User nach einer ehrlichen Meinung zur 3D-Szene, ehrlich antworten (Agentur-Seite R17: Haus, Laptop und Savanne waren hübsch, sagten Betriebsinhabern aber nichts und wogen 9 MB). Besser: die Welt aus dem **Logo** bauen (Löwe aus Flächen: dieselben Dreiecke ordnen sich pro Abschnitt zu dem, worum es geht; man fliegt durch das Logo hindurch). Wiegt ein paar KB, erzählt die Marke, und die „geile Transition“ (durch etwas hindurchfliegen) ist eingebaut.
+- Gewicht: 3D unter 1 MB, wo es geht. Prozedural aus Code (InstancedMesh, eigener Shader) schlägt GLB-Modelle, wenn die Form einfach ist.
+- Echt statt Bastel-Look: Szenen mit vielen Gegenständen in Blender mit echten Assets und gebackenem Licht bauen, nicht aus Würfeln in Three.js. („baue die Szene in Blender mit Assets“, Portfolio Runde 3)
+- Die Kamera bewegt sich wie ein Mensch: Kurve statt gerader Linien, leichtes Atmen, Wippen beim Gehen, etwas Mausblick. Nicht an jeder Station hart stehen bleiben.
+- Wesen und Objekte haben eine eigene Idee, nicht das Erstbeste (Quallen wurden ersetzt). Vorschlagen: was passt zum Leitmotiv? (Portfolio: Glas-Himmelswal aus Ringen, Papierkraniche).
+- Text nie über dem hellsten Punkt der Szene (Portal, Fenster, Bildschirm). „mit kombination mit dem hintergrund also fenster sieht es nicht so gut aus“ (Portfolio R11). Richtig: Text in eine Bildhälfte, den Blickpunkt der Station so drehen, dass der helle Punkt in der anderen Hälfte steht, am Handy eigener Blickpunkt (`blickHandy`), bis er ganz aus dem Bild ist. Und die Kamera stehen lassen, solange der Text im Bild ist (`data-halt`: Anteil des Wegs zur nächsten Station, in dem die Kamera noch steht). Sonst wandert der helle Punkt beim Weiterscrollen doch hinter den Text.
+- Leere 3D-Strecken ohne Text („Durchgänge“) kurz halten. Alle vier simulierten Kunden hielten einen leeren grauen Bildschirm für einen Ladefehler. Jeder Durchgang bekommt eine kurze große Zeile, die sagt, was man sieht („Aus Flächen gebaut.“, „Stück für Stück zu eurer Website.“); höchstens eine Strecke pro Seite bleibt bewusst leer (Taste-Gate `empty-screens`).
+- Scroll-Karussell (Kartenring): jede Karte hält einen großen Teil ihres Scrollwegs still (60 %). Der Projekttext wechselt über die **Zeit** (rund 0,2 s, alter Text geht schneller als der neue kommt), nicht über den Scrollweg. Sonst bleibt beim Anhalten eine leere oder halb durchsichtige Fläche stehen („sieht kaputt aus“, 4 von 4 im Blindtest). Reiter, Text und vordere Karte immer aus demselben Wert. Pfeile: Desktop oben neben der Überschrift, Handy links und rechts neben der Karte (nicht unter dem Text, sonst schweben sie am Ende allein).
+
+**Zweimal abgelehnt** („sieht immer noch ass aus“): nicht weiter feintunen. Komplett andere Idee oder die einfachste Lösung („ist einfach schon da“) anbieten.
+
+---
+
+## 8 · Blender
+
+Immer: **Vorschau rendern → zeigen → final rendern.** Zwischenstände (Blender-Vorschau) früh an den User schicken.
+
+**Wo**: 1. Blender-MCP auf dem Rechner (`execute_blender_code`, `render_viewport_to_path`, `get_screenshot_of_window_as_image`), nur wenn Blender offen ist. 2. Sonst Cloud: `pip install bpy --break-system-packages` (lief mit bpy 5.0.1 und 5.2.3 für Python 3.13), Cycles CPU. 3. Szenen immer als Skript (`blender/<name>.py`), damit sie wiederholbar sind.
+
+### 8.1 Scroll-Sequenzen (SMTN)
+121 Frames bei 60 fps · transparenter Hintergrund · Kamera statisch, kein Schnitt · Motion Blur aus · erster und letzter Frame ruhige Zustände · keine Bodenschatten · Vorschau 1440 px, 4 bis 12 Samples + OIDN, final 48 Samples + OIDN · drei Area-Lights (warmer Key, kühler Fill, Rim nahe Akzent) · Physik: kinematisch bis zum Ereignis, dann dynamisch, Kraftfeld wenige Frames, Ketten über Gelenke statt Mesh-Kollision.
+Export: `ffmpeg -i render.mkv -vf "scale=1440:-2" -c:v libwebp -q:v 68 -compression_level 6 -start_number 0 public/<name>/%03d.webp`. Unter 5 MB gesamt, für Mobil zweite Stufe 960 px.
+
+### 8.2 Begehbare Echtzeit-Szenen (Onur-Portfolio)
+Aufbau als Skripte: `laden.py`, `vereinfachen.py`, `szene.py`, `backen.py`, `entrauschen.py`, `export.py`, `export.sh` im Ordner `blender/`. Gibt es ein Referenzprojekt mit 3D-Szene (`referenz_projekte`), dessen Skripte als Vorlage nehmen, sonst nach den Schritten unten neu schreiben.
+1. **Assets**: Poly Haven (CC0, frei auch kommerziell). API `https://api.polyhaven.com/files/<id>` mit eigenem User-Agent-Header (ohne kommt 403). Modelle als glTF 1k, Texturen 1k (diff, nor_gl, rough), HDRI 2k. Vorher Vorschaubilder (`cdn.polyhaven.com/asset_img/thumbs/<id>.png`) als Kontaktbogen ansehen und passend auswählen. Liste in `blender/ASSETS.md`.
+2. **Vereinfachen**: Bäume haben Millionen Dreiecke. Blattbüschel ausdünnen (wenige behalten, größer skalieren), Äste per Decimate. Ziel ganze Szene < 350k Dreiecke.
+3. **Maßstab**: Website-Einheiten im Skript (z. B. 1 Einheit = 10 cm), Helfer `B(x,y,z)` rechnet three.js-Koordinaten (y oben) in Blender (z oben) um. Falle: der glTF-Import skaliert mit der Szenen-Einheitenskala mit → beim Import kurz `scale_length = 1`.
+4. **Bauen**: Architektur aus Kisten mit Kachel-UVs (Box-Projektion), Löcher für Fenster als Streifen. Jedes Objekt bekommt Eigenschaften: `lm=<gruppe>` (Lichtatlas), `vc=1` (Licht in Vertex-Farben), `bake=0` (Glas, Leuchtflächen), `export=0` (nur Blender). Stationskameras mit derselben Brennweite wie die Website anlegen.
+5. **Licht backen** (Cycles): Architektur in Lichtatlanten (zweite UV „Lightmap“, `smart_project` + `pack_islands`), Möbel und Pflanzen in Vertex-Farben. Fallen: Cycles backt in die **aktive** UV (vor dem Backen auf Lightmap stellen). Glas beim Backen ausblenden. Leuchtflächen, die nach hinten strahlen würden, ausblenden und durch Flächenlichter ersetzen. `sample_clamp_indirect = 1` gegen Glühwürmchen. 48 Samples reichen mit Entrauschen (OIDN über den Compositor-Knoten Denoise auf das EXR).
+6. **Export**: Shader auf Grundfarbe reduzieren (Normal-/Rauheitskarten braucht gebackenes Licht nicht), Texturen 1024 (Handy 512), WebP. Danach `gltf-transform meshopt` (Decoder ist in three.js dabei, kein Draco nötig). Handy-Variante ohne kleine Deko. Lichtatlas als WebP mit `sqrt(L/(1+L))` kodieren (dunkle Töne behalten Auflösung), heiße Einzelpixel per Median ersetzen. Vertex-Licht ×0.25 speichern, sonst wird bei 1.0 abgeschnitten.
+7. Die fertige `.blend` mit Bildern in `assets/` und relativen Pfaden an den User geben (`fuer_user.py`, eingepackte Bilder mit `unpack_all` auslagern, sonst > 30 MB).
+
+### 8.3 Logo-Renders
+4 transparente PNGs (hell/dunkel × mit/ohne Schatten) plus Varianten auf jeder Grundfarbe, 4000 px, Alpha-Reste < 8 auf 0. Ablage unter `website/logo/`.
+
+---
+
+## 9 · Bauen
+
+**Stack**: Next.js App Router + TypeScript + Tailwind · Lenis (GSAP ScrollTrigger nur, wenn gebraucht) · Sanity-Studio (eingebettet unter `/dashboard` oder als eigener Ordner neben `web/`) · Resend · Three.js (+ R3F + Rapier nur wo angefasst und gerissen wird) · Vitest + Playwright. Statischer Export (`output: 'export'`) reicht oft und läuft auf jedem Server. Bei neuen Next-Versionen zuerst die mitgelieferten Docs in `node_modules/next/dist/docs/` lesen (APIs ändern sich).
+
+**Code-Ordner** (Ort laut Frage 20):
+```
+<code-ordner>/
+├── web/  studio-<name>/  blender/  logo/
+└── CLAUDE.md   Design-Regeln, Verweis auf Projekt.md im Hauptordner
+```
+
+Die Bausteine unten stammen aus den beiden Projekten, aus denen der Skill entstanden ist (SMTN: Scroll, Sequenz, CMS · Onur-Portfolio: Echtzeit-3D). Hat der User eigene Referenzprojekte in `referenz_projekte`, dort zuerst nach Gleichwertigem suchen und anpassen statt neu erfinden. Liegt kein Referenzcode vor, gilt die Spalte „Wofür“ als Bauanleitung: die Datei mit genau dieser Aufgabe neu schreiben.
+
+**Ordnerstruktur** (wie Profis, SMTN Runde 61): Komponenten nach Bereichen, nicht flach.
+```
+src/components/layout/           Nav, Footer, Preloader, SmoothScroll, menu/, cursor/
+src/components/home/<sektion>/   hero/, beats/, about/, contact/ … je Sektion ein Ordner
+src/components/<seite>/          catalog/, legal/, player/
+src/components/ui/icons.tsx      eine Icon-Datei (Play/Pause, Pfeil, Mail, Instagram …)
+src/lib/scroll/  src/lib/config/  src/lib/cms/  src/sanity/
+```
+Umziehen mit `ts-morph` (Importe werden mitgezogen), danach Alias-Importe (`@/components/...`) in `app/` prüfen. Unbenutzten Code löschen, nicht auskommentieren.
+
+**Bausteine Scroll, Sequenz, CMS** (Vorbild SMTN):
+| Datei | Wofür |
+| --- | --- |
+| `components/layout/SmoothScroll.tsx` | Lenis im GSAP-Ticker, `lerp 0.12`, `syncTouch: false`, `lagSmoothing(0)` |
+| `hooks/useFrameSequence.ts` + `lib/image-cache.ts` | Bildsequenz: erst 10 Frames, dann 6 parallel |
+| `components/home/hero/HeroChainCanvas.tsx` | Sequenz auf Canvas scrubben, nächsten geladenen Frame zeigen |
+| `lib/scroll/auto-drive.ts` | `driveTo(y, sekunden)`: eine gesperrte Lenis-Fahrt zur Zeit (für Auto-Strecken) |
+| `lib/cut.ts` + `lib/paper-edge.ts` | Übergang (Papierriss) für Menü und Sprünge, reines DOM + Web Animations |
+| `components/layout/NoiseOverlay.tsx` | Grain |
+| `components/layout/Preloader.tsx` | Lädt Sequenzen, Schriften und Bilder vor, bevor die Seite startet |
+| `app/api/contact/route.ts` + `lib/mail/templates.ts` | Formular → 2 Mails, Honeypot, Mindestzeit, IP-Limit, mailto-Fallback |
+| `lib/cms/site.ts` + `sanity/studio/schemaTypes/lib/fields.ts` | Jeder Text mit Standardtext, leeres CMS-Feld = Standardtext |
+| `scripts/seed-sanity.ts` | Schreibt die Standardtexte einmal ins CMS (`createIfNotExists` + `setIfMissing`) |
+| `components/legal/LegalPage.tsx`, `app/(site)/impressum`, `app/(site)/datenschutz` | Rechtsseiten |
+| `components/tuning/TuningVersions.tsx` | Dev-Regler für Varianten |
+
+**Dashboard für den Kunden** (Sanity-Studio unter `/dashboard`, „so einfach wie möglich“):
+- Reihenfolge per Ziehen: `@sanity/orderable-document-list` (`orderRankField` im Schema, `orderableDocumentListDeskItem` in der Struktur, Abfrage `order(coalesce(orderRank, "~"))`).
+- Vorschau mit Klicken-zum-Bearbeiten: `presentationTool` mit `resolve.locations` + Draft Mode (`/api/draft-mode/enable` über `defineEnableDraftMode`) + `<VisualEditing />` im Layout, Stega-Kodierung im Vorschau-Client. Braucht einen Lese- oder Schreib-Token und den CORS-Ursprung der Seite (mit Credentials) in sanity.io/manage.
+- Fallen: `draftMode()` aus `next/headers` nie in Modulen, die auch Client-Komponenten importieren (Build-Fehler) → Vorschau-Flag als Parameter durchreichen. Stega-Zeichen brechen Textmessung und technische Felder → Filter für Slugs, URLs, E-Mail, Enums und `stegaClean` vor dem Messen.
+- Sobald die Texte im CMS stehen, gelten Änderungen an den Standardtexten im Code nicht mehr: im Dashboard ändern oder neu seeden.
+- **Statischer Export** (`output: 'export'`) geht auch mit Dashboard: Studio als eigene Root-Gruppe `app/(studio)/dashboard/[[...tool]]/` (eigene Hülle ohne Kopfzeile, Tor und 3D, `robots: noindex`) mit `generateStaticParams() → [{ tool: [] }]`. Der Server leitet `/dashboard/*` auf `/dashboard/index.html` (Caddy `try_files {path} /dashboard/index.html`, eigener Testserver genauso). Inhalte holt ein Skript vor `dev` und `build` (`prebuild`) nach `src/lib/cms/stand.json` (im Repo `{}`), Bilder und Videos nach `public/cms/` (Dateiname mit Asset-ID, Altes wegräumen). Kein Netz oder keine Projekt-ID: letzter Stand bleibt, Build läuft weiter. Live erscheint es erst nach dem nächsten Build, deshalb beim Livegang einen Sanity-Webhook für den Neubau einplanen und dem User sagen.
+- Zusammenführen in einer reinen Funktion mit Unit-Tests: leeres Feld = Standardtext (nichts kann aus Versehen leer werden), Projektliste und Reihenfolge aus dem Dashboard, ein Eintrag ohne Text wird nie als leere Karte gezeigt, Preise nur als gültige Zahlen ≥ 0. Preise nie fest in Texte schreiben („ab 1000 €“), sondern aus dem Rechner ableiten, sonst stimmen Tor, Hero und Meta nach einer Preisänderung nicht mehr.
+- Einfach halten: links nur wenige Punkte (Projekte zum Ziehen, je Person ein festes Dokument, ein Dokument „Texte und Preise“), feste IDs ohne „Neu“, „Löschen“, „Duplizieren“, deutsche Oberfläche (`@sanity/locale-de-de`), Feldbeschreibungen in Kundensprache. Login = eigenes Sanity-Konto (Google, GitHub, E-Mail), Zugang über Members in sanity.io/manage. Befüll-Skript (`createIfNotExists` + `setIfMissing`, Fotos und Standbilder hochladen) mit einem Editor-Token, der danach wieder gelöscht wird. Schritt für Schritt in `DASHBOARD.md` (Projekt anlegen, ID in `.env.local`, CORS mit Credentials für Dev-Port und Domain, Members, Befüllen).
+- Versionen passend wählen: `next-sanity@12+` braucht Next 16 und React 19.2. Mit Next 15: `sanity@4` + `next-sanity@11` + `@sanity/orderable-document-list@1.5`. Vorher `npm view <paket>@<version> peerDependencies` prüfen.
+- Das Dashboard nirgends auf der Seite verlinken, in `robots.txt` sperren, nicht in die Sitemap. E2E: lädt ohne Website-Hülle, Unterseiten liefern 200, kein Link auf `/dashboard`. Datenschutz: der Bearbeitungsbereich legt ein Login-Token im Browser ab, das gehört (ohne Adresse) in den Abschnitt „Speicher im Browser“.
+
+**Bausteine Echtzeit-3D** (Vorbild Onur-Portfolio, `website/web/src/components/`):
+| Datei | Wofür |
+| --- | --- |
+| `Erlebnis.tsx` + `Tor.tsx` | Ton-Frage als Leiste (blockiert nichts, Scrollen = ohne Ton), Ladeanzeige, Lenis, Scroll → Kamerastationen |
+| `welt/Welt.ts` | Renderer, Kamera auf Catmull-Rom-Kurve (`centripetal`) mit menschlicher Bewegung, Nachbearbeitung (Bloom, Röhren-Shader mit Wölbung, Farbrand, Rauschen) |
+| `welt/facetten.ts` | Logo-Pfad triangulieren (`ShapeUtils`, lange Kanten teilen), ein InstancedMesh aus Dreiecken mit Baryzentrik, Shader mit Glas, leuchtenden Kanten, Lichtwelle, Akzent-Flächen; Formationen pro Station (Logo, Tunnel, Bildschirm, Ring, Kuppel, Feld, Stufen, Hälften) mit Verzug, Wirbel und Form-Matrix |
+| `welt/haus.ts` | (wenn ein Raum gebraucht wird) GLB laden (Meshopt), Materialien auf gebackenes Licht umstellen (MeshBasic + Lichtatlas/Vertex-Licht), bewegliches Zusatzlicht im Shader |
+| Portal in `Welt.ts` | „Welt im Bildschirm“: Stencil-Portal, Materialklassen welt/vorne/hinter, Schnittebene, wenn die Kamera drin ist |
+| `welt/partikel.ts` + `formen.ts` | Partikel verwandeln sich pro Station in Formen (auch Schrift aus Canvas), mit Verzug und Wirbel |
+| `welt/spur.ts` | Aura-Spur am Mauszeiger (Ping-Pong-Textur, Bruch im Röhren-Shader) |
+| `welt/tiere.ts` | Prozedurale Wesen per Shader animiert (Glaswal aus Ringen, Papierkraniche instanziert) |
+| `ton/Ton.ts` | Web-Audio-Ton ohne Dateien (Brummen, Rauschen, Klick, Rieseln) |
+| `sektionen/Arbeiten.tsx` | CSS-3D-Bogen aus Browserfenstern 16:10 mit Video-Loops, Größe aus der Bildschirmhöhe, Winkel so, dass sich keine überdecken, wächst mit jedem Projekt |
+| `server/anfrage/server.mjs` + `compose.yml` + `einrichten.sh` | Formular bei statischem Export: Node-Dienst ohne Abhängigkeiten (127.0.0.1, Docker `node:22-alpine`, read-only), Resend per `fetch`, Anfrage an uns mit `reply_to` Kunde, Bestätigung an den Kunden in seiner Sprache, Honeypot, 5 pro 10 min je IP, Herkunft-Prüfung, 503 ohne Schlüssel. Caddy: `reverse_proxy /api/* 127.0.0.1:<port>` in den Site-Block (vorher sichern, `caddy validate`, dann `reload`). Seite: `fetch('/api/anfrage')`, Danke-Zustand mit „Bestätigung an <mail>“, bei Fehler fertige Mail per `mailto` als Knopf |
+
+**Regeln**
+- Erst die ganze Seite statisch und vollständig mit echten Texten, dann Animationen obendrauf (Flächen dafür im Layout vorsehen).
+- Jede Sektion eigene Komponente. Texte nie hart im JSX, sondern aus `lib/cms/*` bzw. `lib/content.ts` mit Standardwert, DE und EN gemeinsam pflegen.
+- Varianten über Registry + Tuning-Panel, bis entschieden. Entschiedenes wird Standard, Rest nach `_backups/`.
+- Fallen: zeitbasierte Übergänge mit `dt` nicht zu knapp deckeln (0,05 s): auf langsamen Geräten zieht der Übergang sonst ewig nach und Text bleibt halb durchsichtig (axe meldete Kontrast nur unter Last), bis 0,1 s und außerhalb des Bildes sofort einrasten · `.grain-texture` ohne `position` (bricht `sticky`) · Pro-Frame-Werte nie in React-State · localStorage-Presets mit Schema-Version · Rapier-Glieder ohne gegenseitige Kollision · 3D-Pakete optional laden · `onBeforeCompile` geht beim `material.clone()` verloren (mitkopieren) · Seitenanfang muss genau die erste Kamerastation zeigen (Scroll-Abbildung mit Offset) · Zeitgesteuerte Effekte (Flackern, Hochzählen) aus der vergangenen Zeit rechnen und mit einem Schluss-Timeout absichern, nicht Schritte zählen.
+- **Projekt-Loops**: echte Projekte (öffentliche Repos klonen, Demo starten) mit Playwright aufnehmen oder aus Screens animieren, mit `imageio-ffmpeg` als WebM (VP9) + MP4 (H.264) + JPG-Poster, zusammen < 2 MB.
+- Mobil von Anfang an: `svh`/`dvh`, `clamp()`, Touch-Ziele ≥ 44 px, Touch-Scroll nativ, leichtere 3D-Variante (weniger Partikel, kleinere Texturen, Pixel-Ratio begrenzen).
+- **Für Suchmaschinen und KI** (jede Seite, ungefragt): `robots.ts` (alle erlaubt, KI-Crawler ausdrücklich: GPTBot, OAI-SearchBot, ChatGPT-User, ClaudeBot, Claude-SearchBot, Claude-User, PerplexityBot, Perplexity-User, Google-Extended, Applebot-Extended, CCBot, Meta-ExternalAgent, Amazonbot, DuckAssistBot, MistralAI-User), `sitemap.ts` mit Sprach-Alternativen, `/llms.txt` (llmstxt.org: Markdown, Zusammenfassung, Angebot mit echten Preisen, Projekte, Kontakt, Seiten), `/llms-full.txt` (plus Ablauf, zweite Sprache, Impressum, Datenschutz im Wortlaut), `/llm.txt` als Kopie (manche fragen ohne s), JSON-LD (Person, WebSite, ProfessionalService mit `minPrice` nur für feste Preise), `<link rel="alternate" type="text/markdown" href="/llms.txt">`. Alles aus `content.ts` erzeugt (`lib/maschinenlesbar.ts`, Routen mit `dynamic = 'force-static'`), nie von Hand. Unit-Test: nur Preise aus dem Rechner, nur sichtbare Projekte. Eigene 404 (`global-not-found.tsx`), Rechtsseiten mit eigenem Canonical.
+- Ohne WebGL (alte Geräte, ausgeschaltet) vorher prüfen (`canvas.getContext('webgl2'|'webgl')`, Kontext freigeben) und three.js gar nicht laden, sonst Konsolenfehler (Best Practices 96) und unnötiger Download. Ruhiger Hintergrund als zweiter Weg.
+- 3D-Welt erst nach dem ersten Bild starten (zwei `requestAnimationFrame`, `document.fonts.ready`, `requestIdleCallback`, dann `import()`): LCP am Desktop 11 s → 0,8 s.
+- **Rechtsseiten (Impressum, Datenschutz)**: eigene Routen in beiden Sprachen, ruhig, ohne Scroll-Effekte, im Footer verlinkt. Texte in `lib/recht.ts`, Kontaktdaten aus `content.ts` (nie doppelt pflegen). Vor jedem Projekt die aktuelle Rechtslage per Websuche prüfen (Gesetze ändern sich). Immer dazusagen: Vorlage, keine Rechtsberatung, vor dem Livegang einmal prüfen lassen (AT: WKO, DE: IHK oder Anwalt).
+  - **Impressum** nach Land: AT § 5 ECG (Name, Anschrift, Kontakt, Unternehmensgegenstand, bei Gewerbe: GISA-Zahl, Kammer, Behörde, UID, Firmenbuch) **plus** Offenlegung § 25 MedienG (Medieninhaber, Wohnort, grundlegende Richtung). DE § 5 DDG (früher TMG) plus Verantwortlicher nach § 18 MStV. CH Art. 3 UWG. Gewerbe-Block erst nach der Anmeldung einschalten (`sichtbar`), vorher nichts erfinden. Wer abrechnet, steht im Impressum (bei mehreren Leuten den fragen).
+  - **Datenschutzerklärung** (DSGVO Art. 13, in CH revDSG): Verantwortlicher mit Anschrift und Mail, dann **ein Block pro tatsächlicher Verarbeitung** mit Zweck, Rechtsgrundlage, Empfänger, Speicherdauer: Server-Logs beim Hoster (Art. 6 Abs. 1 lit. f, Löschfrist nennen, AV-Vertrag mit dem Hoster), Kontakt per Mail/Telefon (lit. b), Kontaktformular mit Mail-Dienst (z. B. Resend: Auftragsverarbeiter, Sitz/Drittland nennen, Data Privacy Framework oder Standardvertragsklauseln), CMS (Sanity: nur die Leute mit Zugang zum Dashboard), Zahlungsanbieter (Stripe) nur beim Shop, eingebettete Karten/Videos (Mapbox, YouTube) nur mit Einwilligung oder Zwei-Klick-Lösung. Danach Speicher im Browser (Cookies, Local/Session Storage: was, wofür, wie lange, oder ausdrücklich „nichts“), Betroffenenrechte (Auskunft, Berichtigung, Löschung, Einschränkung, Übertragbarkeit, Widerspruch, Widerruf), Beschwerderecht bei der Aufsichtsbehörde (AT Datenschutzbehörde dsb.gv.at, DE die Landesbehörde des Sitzes, CH EDÖB), Stand-Datum.
+  - **Keine Einwilligung nötig, kein Cookie-Banner**, solange: Schriften lokal (`next/font/local`, nie Google-Fonts-Server), Videos und Bilder auf dem eigenen Server, kein Tracking und keine Analyse, keine fremden Einbettungen. Kommt so etwas dazu (Analytics, Maps, YouTube, Pixel): Einwilligungs-Banner mit gleichwertigem „Ablehnen“ und erst nach Klick laden. Lieber datensparsame Lösungen vorschlagen (selbst gehostete Statistik ohne Cookies, Kartenbild statt Live-Karte).
+  - **Datenschutz muss zum Code passen** und wird geprüft, nicht geglaubt: (a) Unit-Test oder `grep`, dass jeder fremde Dienst im Code (`fetch`-Ziele, `<script src>`, `<iframe>`, Mail-Dienst, CMS) in der Datenschutzerklärung steht. (b) E2E-Test, der alle Netzwerk-Anfragen einer Seitenrunde sammelt (`page.on('request')`) und nur die eigene Domain erlaubt (plus die Dienste aus der Erklärung). (c) `grep sessionStorage|localStorage|document.cookie` gegen den Absatz zum Browser-Speicher. Bei Portfolio stand monatelang „Session Storage“ in der Erklärung, obwohl der Code längst nichts mehr speicherte.
+  - **Hosting für Kunden** (Hosting-Paket): wir sind dann Auftragsverarbeiter des Kunden, also AV-Vertrag mit dem Kunden plus eigener mit dem Hoster. Im Vertrag (3.4) und im Rechner als Hinweis.
+- Hosting: Hetzner mit Caddy oder Coolify, `DEPLOY.md` eines Referenzprojekts als Vorlage, sonst eine schreiben (Server, Caddy-Config, Build, Env-Namen). Resend-Domain verifizieren. Secrets nie in den Chat. `.env.local.example` mit allen Variablennamen (ohne Werte) im Repo halten. Schreiben die Werkzeuge keine env-artigen Dateien (blockiert), nicht umgehen: Vorlage als `<name>-vorlage.txt`, der User kopiert sie und trägt den Schlüssel selbst ein; das Einrichten-Skript lädt sie hoch (`chmod 600`). Den Schlüssel nie lesen oder ausgeben.
+- Alles so weit bauen, dass nur noch die Schritte des Users fehlen (Domain kaufen, DNS, Resend-Domain bestätigen, Schlüssel-Datei), und diese in einer `LIESMICH-<Thema>.md` als nummerierte Liste aufschreiben. Bis dahin muss die Seite trotzdem funktionieren (Formular fällt auf `mailto` zurück).
+
+---
+
+## 10 · Prüfen und Änderungsrunden
+
+**Jede Runde prüfen**: `npx tsc --noEmit` + Lint + Taste-Lint + Unit-Tests + Build · E2E-Suite (10.1 Schritt 2) bei 1440×900 **und** 390×844, runter **und** hoch, Screenshots selbst ansehen · Anti-Slop-Liste gegen die Screenshots · Formular einmal absenden · bei großem Umfang prüft ein separater Agent ohne Bauverlauf. Den vollen Rundgang (10.1) bei jeder größeren Runde, vor der Abnahme und bei `prüfen`.
+
+### 10.1 Qualitäts-Rundgang (Tests, Lighthouse, simulierte Kunden)
+
+Ziel: Fehler finden, **beheben** und erneut prüfen, bis alles grün ist. Nicht nur berichten. Aufgabenliste mit den sechs Schritten anlegen. Gibt es noch keine Tests (fremdes Projekt), zuerst die Suite aus Schritt 2 anlegen.
+
+**1. Grundlagen**: `tsc --noEmit`, Lint, Taste-Lint (`lint.mjs src`, 0 FAIL), Unit-Tests (Vitest), Produktions-Build. Unbenutzten Code suchen (Exporte ohne Importeur, Dateien ohne Import, alte Varianten) und löschen. Secrets-Check: kein Token-Wert außerhalb von `.env.local` (`grep -rF <wert>`).
+
+**2. E2E mit Playwright** (`e2e/`, je Bereich eine Datei, Projekte `desktop` 1440×900 und `mobile` Pixel 7 390×844, gegen den Produktions-Build):
+- `smoke`: jede Route lädt ohne Konsolenfehler, unbekannte Adresse → 404 mit Weg zurück, Open-Graph-Angaben, Sitemap.
+- `a11y`: `@axe-core/playwright` auf jeder Route, keine Verstöße „serious“/„critical“ (typisch: `label-content-name-mismatch` → das aria-label muss den sichtbaren Text enthalten, z. B. den Preis).
+- `form`: Pflichtfelder, falsche Mail, Erfolg mit gemocktem Server (`page.route('**/api/anfrage')`, gesendete Daten prüfen, Danke mit eigener Adresse), Server-Fehler (503) zeigt die fertige Mail als Knopf, Mail-Adresse bleibt sichtbar.
+- `menu`, `legal`, `back` (Zurück landet an derselben Stelle), `catalog`/Shop, `dashboard` (Studio lädt ohne Website-Hülle).
+- `scroll-human` mit Helfer `e2e/human.ts`: Mausrad in Rasten-Gruppen mit Lesepausen und gelegentlichem Zurück, Touchpad mit Schwung, Daumen-Wisch auf dem Handy. Runter bis zum Footer und wieder hoch, prüft: kein Sprung, kein Hängenbleiben, Auto-Strecken lösen erst am richtigen Punkt aus.
+- Tests prüfen Verhalten (Text wechselt, Seite kommt an), nicht nur, dass ein Element existiert. Nach Designänderungen Tests anpassen, nie löschen oder aufweichen, um grün zu werden. Ein rot gewordener Test ist oft ein echter Fehler: erst die Ursache messen (z. B. lange Frames per `requestAnimationFrame`-Log), dann entscheiden, ob Code oder Test falsch ist.
+- WebGL in der Cloud: Chromium mit `--use-angle=swiftshader --enable-unsafe-swiftshader`, eigenen Pfad per `PW_CHROMIUM_PATH` übergeben, wenn die Playwright-Version nicht zum installierten Browser passt. Software-WebGL macht Frames von bis zu 4 s, deshalb großzügige Zeitlimits. Lange Läufe im Hintergrund mit großem Zeitlimit.
+- Bei 3D-Seiten zwei Projektpaare: `desktop`/`mobile` mit `--disable-webgl --disable-3d-apis` (testet die ganze Bedienung über den ruhigen zweiten Weg, schnell) und `desktop-webgl`/`mobile-webgl` nur für Smoke und Scrollen durch die Welt. Sonst dauert ein Lauf Stunden. WebGL-Meldungen in den Projekten ohne WebGL ignorieren (`test.info().project.name`).
+- Test-Server wie der echte Server (kleines Node-Skript `scripts/statisch.mjs`: `index.html` pro Ordner, `404.html` mit Status 404, Range für Videos, gzip, `.glb`-Typ). `python -m http.server` kennt weder 404-Seite noch gzip und verfälscht Lighthouse.
+- Pulsierende Knöpfe (gibt es seit v6 nicht mehr) sind für Playwright nie „stable“: `click({ force: true })`. Nach einem Klick die Maus aus dem Bild nehmen, sonst zeigen Fotos Hover-Zustände.
+- Zurück-Test: Impressum öffnen, `goBack()`, Stelle muss stimmen. Neuladen weit unten: Tor/Hero oben, nicht über einem Abschnitt.
+- Fällt ein Test nur im großen Lauf durch (unter Last), nicht als Zufall abtun: mit `--repeat-each` und zwei Workern nachstellen, Werte loggen. Bei Portfolio war es ein echter Fehler (Text blieb halb durchsichtig).
+
+**3. Lighthouse** auf jeder Route, Handy und Desktop, gegen den Produktions-Build:
+`npx lighthouse <url> --output=json --quiet --chrome-flags="--headless=new"` (Handy, Standard) und zusätzlich `--preset=desktop`. Werte als Tabelle (Performance / Barrierefreiheit / Best Practices / SEO) in die Runden-Notiz.
+- Ziel: Barrierefreiheit, Best Practices, SEO 100 (mindestens 95). Performance ≥ 90 auf Seiten ohne WebGL.
+- Seiten mit WebGL oder Bildsequenzen: in der Cloud nicht aussagekräftig (Software-Rendering). Dort nur die anderen drei Werte ernst nehmen und nach dem Deploy mit PageSpeed Insights echte Werte holen. Dem User sagen, warum.
+- Lighthouse rechnet standardmäßig **simuliert** (Lantern): lange Aufgaben aus Software-WebGL blähen LCP künstlich auf (15 s gemeldet, echt 1,4 s mit 4-fach gedrosselter CPU, gemessen per `PerformanceObserver('largest-contentful-paint')` in Playwright). Für 3D-Seiten zusätzlich einmal mit `--chrome-flags="--disable-webgl"` messen: das ist der Wert der HTML-Hülle und muss ≥ 90 sein.
+- Den statischen Server im **selben** Hintergrundbefehl wie Lighthouse starten und am Ende per PID beenden. Mit `nohup` gestartete Server sterben nach der Antwort, Lighthouse meldet dann nur `CHROME_INTERSTITIAL_ERROR`. Eine Seite mit Status 404 bewertet Lighthouse nicht: `/404.html` direkt prüfen, SEO dort niedrig ist richtig (noindex).
+- Typische Fixes: Schriften lokal über `next/font/local` (nur latin, mit Preload, eigene Ersatzschrift) + `font-display: swap`, Testserver mit gzip, Hero-Bild mit `fetchpriority="high"` und richtiger Größe (WebP/AVIF), Three.js und große Pakete per `dynamic import` erst bei Bedarf, `aspect-ratio`/feste Größen gegen Layout-Verschiebung, ungenutztes JS/CSS raus.
+
+**4. Simulierte Kunden (Persona-Agents mit Klick-Heatmap)**
+1. Stationen fotografieren: ein Playwright-Skript fährt jede wichtige Stelle an (Hero Anfang/Ende, jede Sektion, Menü offen, Unterseiten wie Katalog/Shop), Desktop und Handy. Positionen über `getBoundingClientRect().top + scrollY` messen (nicht `offsetTop`, das bricht in gepinnten Sektionen), nach dem Sprung warten, bis Animationen stehen. Zählende Zahlen erst nach dem Hochzählen fotografieren. Screenshots selbst ansehen, bevor sie rausgehen: falsche Bilder erzeugen falsche Kritik.
+2. Vier Agents **parallel** starten (eine Nachricht, vier Aufrufe), jeder ein echter Typ aus der Zielgruppe in `Projekt.md`. Immer dabei: der **Hauptkäufer** (SMTN: Rapper, der einen Beat sucht), ein **Firmenkunde** mit größerem Auftrag (Markenverantwortliche), ein **Design-Profi**, der streng urteilt (Art Director), ein **Ungeduldiger am Handy** (Teenager). Jeder Agent bekommt nur die Screenshots und eine kurze Rolle (Alter, Ziel, Budget, Geduld), keinen Code und keinen Bauverlauf, und gibt JSON zurück:
+   `{ "erster_eindruck_5s": "...", "klicks": { "<screenshot>": [[x, y, reihenfolge, "was ich erwarte"]] }, "unklar": [...], "wuerde_gehen_weil": [...], "wuerde_kaufen_oder_anfragen_wenn": [...], "top3_fixes": [...] }`
+3. Heatmap bauen (Python, PIL + numpy): pro Screenshot jeden Klick als weichen Fleck (Gauß, Radius ≈ 40 px) aufsummieren, rot-gelb über das Bild legen, nummerierte Kreise in Klick-Reihenfolge und Farbe je Persona, dazu eine Übersicht aller Stationen als Raster. Übersicht an den User schicken.
+4. Auswerten: Punkte nach Häufigkeit sortieren (wie viele Personas haben es gesagt). Jeden Punkt erst gegen die eigenen Screenshots prüfen (war es ein Fehler im Foto-Skript? Bei SMTN zeigte ein Foto-Fehler zugleich einen echten Fehler: eine Auto-Fahrt löste bei Sprüngen aus). Beheben, was mindestens zwei sagen oder was den Kauf/die Anfrage blockiert. Der Rest kommt als Vorschlag in die Notiz. Heiße Stellen ohne Funktion (Leute klicken, nichts passiert) werden klickbar oder verschwinden.
+5. Ehrlich bleiben: Das sind Annahmen, keine echten Besucher. In Texten an den User „simulierte Kunden“ sagen, nie als echte Daten ausgeben.
+6. **Bewegung prüfen mit Bildfolgen**: Standbilder zeigen nicht, wie sich Scrollen anfühlt. Für jede scrollgesteuerte Stelle (Karussell, gepinnte Sektion, Kamerafahrt) eine Bildfolge aufnehmen: Desktop Mausrad (2 Rasten, dann Pause), Handy Daumen-Wisch per CDP `Input.dispatchTouchEvent` (`synthesizeScrollGesture` scrollt nicht), alle 250 ms ein Bild, bis hinter das Ende der Stelle. Als Kontaktbogen (6 Spalten Desktop, 10 Handy) mit Bildnummer und Fortschritt in % beschriften. Ohne WebGL reicht für DOM-Bewegung, für die 3D-Komposition mit WebGL fotografieren.
+7. **Blindtest bei Änderungen**: Alt und neu als „A“ und „B“ beschriften, zufällig verteilt (der Agent weiß nicht, was neu ist). Gemeinsamer Auftrag als Datei (`auftrag.md`), jeder Agent schreibt sein JSON selbst nach `<persona>.json`:
+   `{ "persona", "<stelle>": { "besser": "A|B|gleich", "warum", "probleme": [{ "bild": "<datei> #<nr>", "was" }], "fix" }, "top3_fixes": [...] }`
+   Entscheidet die Mehrheit für die alte Variante, ist das kein Fehlschlag, sondern der wichtigste Befund: die neue Variante nach den genannten Bildnummern nachbessern, neu aufnehmen, selbst ansehen. (Portfolio R11: 4 von 4 nahmen beim Karussell die alte Fassung, weil die neue beim Anhalten kurz leer war. Nach dem Fix war in keinem Bild mehr leerer oder halber Text.)
+
+**5. Selbst ansehen**: Taste-`inspect.mjs` (0 FAIL, Bilder öffnen), alle Stationen in beiden Größen, runter und hoch, Menü und Übergänge einmal in Bewegung (Bildfolge). Gegen Abschnitt 7 und die Taste-Hausregeln prüfen.
+
+**6. Festhalten**: in `Notizen/Runde-<N>.md` die Tabelle der Tests (bestanden/gesamt), Lighthouse-Tabelle, Persona-Befunde mit Häufigkeit, Pfad der Heatmap, was behoben wurde und was offen ist. Danach Schritt 1 bis 3 nach den Fixes noch einmal.
+
+**WebGL prüfen**: Chromium mit `--use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader` (Software, 0,5 bis 2 Bilder/s). Für Stations-Screenshots `reducedMotion: 'reduce'` setzen (die Welt rendert dann sofort den Endzustand), mit `?debug` die Welt als `window.__welt` freigeben und warten, bis das GLB geladen ist. Echte Bildrate am Rechner des Users nachfragen. Statischen Build mit dem eigenen Testserver (Schritt 2) servieren, nicht mit `python -m http.server`.
+
+**Vorschau als Artifact**: `assetPrefix '/p'`, `_next` nach `p/_next`, alle absoluten Pfade relativ machen, U+FFFD escapen, Body-Farbe im CSS setzen. `.glb` wird nicht ausgeliefert: als glTF-JSON mit eingebetteten Daten (`.json`) ablegen und im Bundle `".glb"` → `".json"` tauschen. Dateien max. 16 MB.
+
+**Lokal beim User**: Dev-Server auf `dev_port` (Standard 5000) per `start-<port>.bat` bzw. auf Mac/Linux `start-<port>.command`. Auf Windows nie neue Fenster öffnen, sondern Tabs im offenen Windows Terminal: ein `<Name>-starten.vbs` ruft `wt.exe -w 0 nt --title <Titel> -d <ordner> cmd /c <skript>` je Server auf (Wunsch des Users). (Doppelklick per Computer-Use; der Explorer ist nur „click“: Ordner über die Pfadleiste und Doppelklick öffnen, nichts tippen). Die `.bat` beendet zuerst einen alten Server auf dem Port (`netstat -ano | findstr` + `taskkill /PID`), führt immer `call npm install --no-audit --no-fund` aus (schnell, wenn nichts fehlt) und löscht `.next`. `npm install` nie über eine Linux-Shell in den Windows-Ordner (falsche native Pakete). Prüfen, ob es lief: `node_modules/<neues Paket>` und frisches `.next` über die Brücke ansehen. Mit Claude in Chrome `localhost:<port>` öffnen, um zu zeigen, dass es läuft (zeigt Chrome nur eine Fehlerseite, `127.0.0.1:<port>` versuchen: `localhost` kann auf IPv6 zeigen).
+**Handy-Link wie bei SMTN**: `scripts/handy.mjs` + `<Name>-Handy.cmd`: bauen (eigenes `distDir` wie `.next-handy`, damit der laufende Dev-Server nicht gestört wird; der Export landet dann dort, nicht in `out/`), kleiner Node-Server fürs WLAN, `npx cloudflared tunnel --url http://127.0.0.1:<port>`, Link und QR-Code im Fenster. In `.cmd` immer `call npm …` (npm ist selbst ein Batch, ohne `call` kehrt die Datei nie zurück). Ein frischer trycloudflare-Link antwortet am PC oft noch nicht (Namensdienst, rund 1 Minute), von außen schon: nicht als Fehler melden. Immer `--protocol http2` mitgeben: QUIC (UDP) ist in Schul- und Firmennetzen oft gesperrt, dann kommt „tunnel not found“. Manche Netze sperren auch TCP-Port 7844 (Log: `dial tcp …:7844: i/o timeout`, Link antwortet 530): dann gibt es keinen Tunnel. Ausweg ist eine Vorschau-Adresse auf dem eigenen Server (z. B. `<name>.<ip-mit-strichen>.sslip.io` mit HTTPS über Caddy), die nach jedem Hochladen den neuen Stand zeigt und überall am Handy geht.
+**Dateien über die Brücke** (ohne Shell auf dem Rechner): `device_stage_files` geht nur 7 Ordner unter den verbundenen Ordner, Schreiben geht tiefer. Backups deshalb als **eine Zip-Datei** in `_backups/<datum>-vor-<runde>/`, Unit-Tests in `tests/` statt `src/lib/__tests__`. Jede neue Fassung einer Datei aus einem neuen Ordner im Ausgabeordner schreiben und danach die Größe auf dem Rechner prüfen (sonst kann eine ältere Fassung ankommen). Mit Shell auf dem Rechner (`device_bash`): Löschrecht einmal anfragen, gelöschte Dateien vorher nach `_backups/<datum>/geloescht/` kopieren.
+**Prozesse beenden**: nie `pkill -f <muster>` oder `kill $(ps … | grep <muster>)`, wenn das Muster im eigenen Befehl steht (beendet die eigene Shell, Exit 144). Suchen mit `ps -eo pid,args | awk '$2=="node" && $3=="<skript>"'`.
+
+**Jede Änderungsrunde**:
+0. Alle Punkte der Nachricht des Users als Aufgabenliste übernehmen (wörtlich gekürzt), nichts unterschlagen. Am Ende jeden Punkt abhaken oder sagen, warum nicht.
+1. Backup der Dateien, die sich ändern, nach `website/_backups/<datum>-vor-runde-<N>/` (außerhalb von `web/`, sonst prüft TypeScript die Kopien mit).
+2. Ändern, prüfen. Betrifft die Änderung, wie sich etwas anfühlt (Scrollen, Übergänge, Lesbarkeit über 3D), vor dem Abschluss einen kurzen Blindtest mit den vier Personas (10.1 Schritt 4.6 und 4.7).
+3. Notiz `Notizen/Runde-<N>.md` im Projektordner: Wunsch wörtlich, was jetzt gilt, Ursache und Fix, was geprüft wurde, Backup-Pfad, was offen ist.
+4. Dem User in einfachen Worten sagen, was sich geändert hat, und **eine** Sache anbieten, falls es noch nicht passt.
+5. `Projekt.md` Verlauf, Stand und Entscheidungen aktualisieren.
+6. Was der User verboten hat, sofort in `CLAUDE.md` / `design.mdc`.
+7. Liegt der Code in Git und hat der User Commit/Push verlangt: kleine Commits pro Thema, vor dem Push `git fetch` und auf den Stand von `origin` setzen, `.env*`, `node_modules`, `.next`, `_backups`, Test-Berichte nie committen.
+8. Steckt in der Runde eine Lehre für alle künftigen Projekte, in `<Hauptordner>/_skills/lernliste.md` notieren (für Abschnitt 11).
+
+**Am Ende eines Projekts**: Status „Live“ in Projekt.md und Blatt Projekte, Schlussrechnung (3.5), offene Weiterverrechnungen (Spalte „Zahlt Kunde zurück?“ = ja) als Rechnungsposition aufnehmen, dem User Übergabe-Liste geben (Zugänge, Befehle wie `npx sanity schemas deploy`, was noch fehlt ❓). Davor einmal den vollen Qualitäts-Rundgang (10.1). Danach **immer** Abschnitt 11.
+
+---
+
+## 11 · Skill verbessern und versionieren
+
+Nach jedem abgeschlossenen Projekt (und wenn der User „verbessern“ sagt) wird dieser Skill besser. Ziel: Am Ende steht ein Skill, der neue Websites im ersten Wurf auf Top-Niveau baut.
+
+**1. Sammeln** (still): alle `Notizen/Runde-*.md` des Projekts, `Projekt.md` (Entscheidungen), `CLAUDE.md` (Verbote) und `_skills/lernliste.md` lesen. Daraus herausziehen:
+- jede Korrektur des Users, die wieder vorkommen könnte (wörtlich zitieren, mit Projekt und Runde),
+- neue Technik, die funktioniert hat (Bausteine mit Pfad),
+- Fallen, die Zeit gekostet haben (Ursache und Lösung in einem Satz),
+- Fragen, die zu spät kamen und vorne in Abschnitt 2 gehören.
+
+**2. Einarbeiten**: in die passenden Abschnitte, nicht als Anhang. Regeln konkret formulieren (mit Beispiel ✗/✓). Nichts Bewährtes löschen. Eine Regel nur ändern, wenn der User sie ausdrücklich umgestoßen hat, und dann den Grund dazuschreiben.
+
+**3. Gegenprüfen**, bevor die neue Version getestet wird:
+- Die neue Fassung muss alles enthalten, was die alte konnte: Abschnitt für Abschnitt mit der letzten Version vergleichen (`diff`). Fehlt etwas ohne Grund, wieder rein.
+- Keine Widersprüche zwischen Abschnitten (z. B. „kein Glas“ vs. „Glas-Knöpfe“): auflösen und sagen, welche Regel jetzt gilt.
+- Keine festen Pfade, Namen oder Konten des Users im Skill (der Skill muss für andere Leute funktionieren). Alles Persönliche gehört in `einstellungen.json`, `meine-daten.json` oder die Referenzprojekte. Prüfen: `grep` nach Laufwerksbuchstaben, `Users/`, Benutzernamen, E-Mail-Adressen.
+- Länge im Blick: lieber verdichten als aufblähen.
+
+**4. Testen: neu muss mindestens so gut sein wie alt.** Keine neue Version ohne diesen Schritt, auch nicht bei „nur kleinen“ Änderungen. Kleine Textänderungen kippen oft Verhalten an anderer Stelle.
+1. Die alte Fassung unverändert sichern (`cp -r <skill> <workspace>/skill-snapshot`), bevor irgendwas geändert wird.
+2. Testfälle liegen im Skill unter `testfaelle/<fall>/` (Aufbau wie `evals/` beim Skill `skill-creator`: `prompt.md`, `case.yaml`, `graders/`, `files/` mit einem Beispiel-Hauptordner). Der Ordner heißt absichtlich nicht `evals/`, weil das Paketskript `evals/` nicht mitnimmt; für `claude plugin eval` vorher in eine Arbeitskopie als `evals/` kopieren. Derzeit drei Fälle: Einrichten für einen fremden User, neues Projekt aus Steckbrief ohne Rückfragen, Geld plus Schlussrechnung. Jede neue Korrektur des Users aus Schritt 1, die sich prüfen lässt, wird ein neuer Testfall oder eine neue Prüfregel in einem bestehenden Fall. Bestehende Fälle nie aufweichen, damit die neue Version besser dasteht.
+3. Ablauf nach dem Skill `skill-creator` („Running and evaluating test cases“): jeden Fall einmal mit der neuen Fassung und einmal mit dem Snapshot ausführen (parallel, gleiche Eingabedateien, gleiche Anweisung), bewerten (`grading.json`), `aggregate_benchmark` laufen lassen, Viewer erzeugen und dem User zeigen.
+4. **Freigabe-Regel**: Die neue Version gilt nur, wenn (a) die Gesamt-Trefferquote gleich oder höher ist als bei der alten **und** (b) keine Prüfregel, die die alte Version bestanden hat, jetzt durchfällt. Bei Gleichstand zählt, ob die neuen Fälle (aus diesem Projekt) jetzt bestanden werden.
+5. Fällt die neue Version durch: Ursache in den Protokollen suchen, nachbessern, neu testen. Nach zwei erfolglosen Runden dem User die Ergebnisse zeigen und fragen, ob die Änderung trotzdem rein soll oder verworfen wird.
+6. Ergebnis kurz in `CHANGELOG.md` festhalten: „v<N>: x/y bestanden (alt: a/b)“.
+
+**5. Versionieren**:
+- Versionsnummer oben im Skill hochzählen (Version N, Datum).
+- Ist `skill_repo` gesetzt: aktuelle Fassung als `neuer-kunde/SKILL.md` (plus `scripts/` und `testfaelle/`), die **vorherige** Fassung unverändert nach `neuer-kunde/versionen/v<N-1>-<datum>.md`, Eintrag in `CHANGELOG.md` (was neu, aus welchem Projekt, Testergebnis). Ein Commit pro Version, Nachricht „neuer-kunde v<N>: <Projekt>“. Vorher einmal fragen, ob committet werden soll.
+- Immer zusätzlich eine Kopie nach `<Hauptordner>/_skills/neuer-kunde/` (mit `versionen/`).
+- Übergabe an den User: Der Skill hat Begleitdateien (`scripts/`, `testfaelle/`), deshalb als Paket schnüren (`python -m scripts.package_skill <skill-ordner>` aus dem Ordner des Skills `skill-creator`) und die `.skill`-Datei mit `SendUserFile` schicken. Nur wenn sich ausschließlich `SKILL.md` geändert hat, reicht `propose_skills` (Verbesserung des Skills `neuer-kunde`), weil es nur die `SKILL.md` überträgt.
+
+**6. Zurück, wenn es schlechter wird**: Sagt der User, die neue Version macht etwas schlechter, die Fassung aus `versionen/` holen, nur den fehlerhaften Teil zurücksetzen, die Beschwerde als Testfall aufnehmen, neu testen (Schritt 4), als neue Version committen (nie Geschichte überschreiben) und erneut übergeben.
+
+**Weitergeben an andere**: Der Skill selbst enthält nichts Persönliches. Wer ihn bekommt, startet mit `/neuer-kunde einrichten` und hat danach seinen eigenen Ordner, seine Vorlagen und Einstellungen.

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hauptordner": "./Websites",
+  "code_ordner": "projektordner",
+  "rechtsraum": "AT",
+  "sprache": "de",
+  "dev_port": 5000,
+  "referenz_projekte": [],
+  "skill_repo": "",
+  "notion_elternseite": "Kunden"
+}

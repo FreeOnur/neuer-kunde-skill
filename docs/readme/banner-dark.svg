@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320">
+<style>
+.t { transform-box: fill-box; transform-origin: center; animation-name: m; animation-timing-function: ease-in-out; animation-iteration-count: infinite; animation-direction: alternate; }
+@keyframes m { from { transform: translate(0,0) rotate(0deg); } to { transform: translate(var(--dx),var(--dy)) rotate(var(--r)); } }
+@media (prefers-reduced-motion: reduce) { .t { animation: none; } }
+text { font-family: "Segoe UI", Inter, "Helvetica Neue", Arial, sans-serif; }
+</style>
+<rect width="1280" height="320" rx="18" fill="#0E1116"/>
+<polygon class="t" style="--dx:33px;--dy:41px;--r:-13deg;animation-duration:8.2s;animation-delay:-0.5s" points="985.9,90.8 923.8,83.5 954.4,31.3" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-12px;--dy:-52px;--r:11deg;animation-duration:6.5s;animation-delay:-2.0s" points="1025.5,250.7 1090.3,260.7 1048.9,313.7" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-60px;--dy:37px;--r:24deg;animation-duration:7.9s;animation-delay:-7.3s" points="1144.1,45.2 1198.2,71.8 1147.4,105.8" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:26px;--dy:29px;--r:-10deg;animation-duration:7.7s;animation-delay:-5.8s" points="976.7,73.5 985.4,111.3 950.0,96.4" fill="#FF7A45" fill-opacity="0.95" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:66px;--dy:1px;--r:9deg;animation-duration:6.4s;animation-delay:-1.7s" points="880.3,140.5 900.0,159.6 871.1,169.4" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-37px;--dy:51px;--r:15deg;animation-duration:8.4s;animation-delay:-4.2s" points="1089.5,79.5 1093.6,9.0 1152.7,46.9" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:53px;--dy:25px;--r:25deg;animation-duration:7.1s;animation-delay:-3.0s" points="872.1,122.3 909.8,63.7 947.2,123.4" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:27px;--dy:-45px;--r:-11deg;animation-duration:8.1s;animation-delay:-5.0s" points="996.2,301.8 922.1,255.0 1000.9,218.3" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:34px;--dy:44px;--r:16deg;animation-duration:7.6s;animation-delay:-3.6s" points="999.0,61.9 936.2,100.8 934.4,24.2" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:19px;--dy:36px;--r:-9deg;animation-duration:6.8s;animation-delay:-2.6s" points="941.4,86.1 997.9,33.7 1018.9,122.8" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-25px;--dy:-53px;--r:23deg;animation-duration:7.9s;animation-delay:-5.5s" points="1050.2,277.2 1111.5,247.5 1105.5,308.2" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-3px;--dy:34px;--r:18deg;animation-duration:9.6s;animation-delay:-3.4s" points="996.7,106.7 1035.1,36.2 1080.5,94.2" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:52px;--dy:-5px;--r:-12deg;animation-duration:8.0s;animation-delay:-5.8s" points="898.6,140.3 946.4,167.3 899.5,199.8" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-93px;--dy:-34px;--r:-12deg;animation-duration:6.9s;animation-delay:-1.4s" points="1239.2,266.7 1207.5,221.1 1259.6,220.7" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:56px;--dy:-15px;--r:-18deg;animation-duration:6.7s;animation-delay:-5.3s" points="937.9,160.8 913.0,234.4 861.6,173.3" fill="#FF7A45" fill-opacity="0.95" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:32px;--dy:-35px;--r:24deg;animation-duration:6.6s;animation-delay:-5.4s" points="916.5,251.6 967.7,189.3 1003.7,260.2" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-91px;--dy:-18px;--r:28deg;animation-duration:6.8s;animation-delay:-5.9s" points="1205.6,192.3 1258.0,188.1 1231.6,228.4" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:89px;--dy:34px;--r:25deg;animation-duration:9.5s;animation-delay:-1.2s" points="838.8,53.8 851.0,105.0 799.0,87.5" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:66px;--dy:-1px;--r:-15deg;animation-duration:8.1s;animation-delay:-4.5s" points="902.0,122.2 917.0,194.0 838.3,176.1" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-54px;--dy:46px;--r:15deg;animation-duration:9.9s;animation-delay:-6.0s" points="1145.8,91.1 1123.1,33.8 1183.6,52.1" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:57px;--dy:26px;--r:-25deg;animation-duration:6.5s;animation-delay:-0.8s" points="921.5,72.2 918.9,133.5 871.3,94.9" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:11px;--dy:50px;--r:-13deg;animation-duration:6.5s;animation-delay:-3.1s" points="1023.8,65.7 982.1,60.9 1011.3,25.2" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-47px;--dy:47px;--r:14deg;animation-duration:8.9s;animation-delay:-0.2s" points="1146.4,95.8 1089.1,37.4 1162.3,18.6" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-10px;--dy:7px;--r:-10deg;animation-duration:7.1s;animation-delay:-6.4s" points="1041.2,157.0 1044.7,128.1 1068.5,150.8" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:60px;--dy:-30px;--r:10deg;animation-duration:6.2s;animation-delay:-4.3s" points="930.5,203.0 907.3,269.5 854.6,213.1" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:14px;--dy:50px;--r:28deg;animation-duration:7.7s;animation-delay:-7.0s" points="979.7,12.0 1046.0,40.7 968.6,90.5" fill="#FF7A45" fill-opacity="0.95" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-23px;--dy:53px;--r:-14deg;animation-duration:8.0s;animation-delay:-1.4s" points="1121.2,30.0 1072.6,76.2 1056.8,10.3" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:29px;--dy:56px;--r:21deg;animation-duration:8.2s;animation-delay:-7.3s" points="988.4,42.4 949.9,51.5 964.7,11.9" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-89px;--dy:22px;--r:-8deg;animation-duration:8.5s;animation-delay:-7.5s" points="1228.7,132.8 1209.6,99.7 1250.2,104.3" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:13px;--dy:52px;--r:17deg;animation-duration:7.1s;animation-delay:-6.8s" points="967.9,58.0 1001.7,5.9 1037.5,58.9" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-89px;--dy:-6px;--r:-13deg;animation-duration:9.1s;animation-delay:-0.8s" points="1252.7,170.5 1221.0,194.0 1216.0,151.2" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-60px;--dy:42px;--r:23deg;animation-duration:8.9s;animation-delay:-4.4s" points="1132.4,81.9 1159.5,32.5 1189.9,83.2" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:41px;--dy:-14px;--r:-25deg;animation-duration:8.3s;animation-delay:-7.4s" points="953.7,174.5 947.5,210.9 918.7,184.2" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-35px;--dy:-23px;--r:-18deg;animation-duration:6.0s;animation-delay:-4.8s" points="1129.9,218.2 1090.3,221.9 1104.6,186.5" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-47px;--dy:-0px;--r:-13deg;animation-duration:8.6s;animation-delay:-4.0s" points="1116.6,127.9 1168.4,160.4 1115.1,185.1" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-65px;--dy:50px;--r:20deg;animation-duration:6.5s;animation-delay:-3.2s" points="1163.4,91.4 1143.9,10.4 1221.6,49.1" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:3px;--dy:-55px;--r:-14deg;animation-duration:6.3s;animation-delay:-3.0s" points="1024.2,302.2 1006.5,273.3 1041.8,276.8" fill="#FF7A45" fill-opacity="0.95" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:40px;--dy:50px;--r:27deg;animation-duration:6.5s;animation-delay:-5.4s" points="972.7,53.9 916.4,71.4 925.2,20.9" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-2px;--dy:-45px;--r:23deg;animation-duration:7.7s;animation-delay:-2.9s" points="1024.1,300.4 997.3,244.5 1069.9,243.3" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:72px;--dy:20px;--r:-16deg;animation-duration:10.0s;animation-delay:-5.9s" points="853.1,132.3 860.0,92.2 896.3,120.0" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:26px;--dy:8px;--r:12deg;animation-duration:7.5s;animation-delay:-7.2s" points="995.4,156.4 950.9,150.3 968.7,116.1" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-73px;--dy:-36px;--r:-21deg;animation-duration:7.1s;animation-delay:-0.3s" points="1228.3,229.2 1181.3,278.6 1165.5,217.1" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-81px;--dy:44px;--r:10deg;animation-duration:8.6s;animation-delay:-0.6s" points="1188.4,83.4 1207.2,33.0 1239.5,69.4" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-0px;--dy:-36px;--r:-14deg;animation-duration:7.5s;animation-delay:-6.0s" points="996.0,240.8 1043.9,209.9 1052.9,266.8" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:56px;--dy:56px;--r:11deg;animation-duration:8.0s;animation-delay:-5.0s" points="863.6,62.9 900.4,-10.2 944.4,59.1" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<polygon class="t" style="--dx:-69px;--dy:33px;--r:-17deg;animation-duration:9.1s;animation-delay:-7.3s" points="1178.6,111.0 1166.7,67.1 1207.2,73.8" fill="#1F2630" fill-opacity="0.85" stroke="#3A4452" stroke-width="1"/>
+<text x="64" y="150" font-size="84" font-weight="800" fill="#EDE6DA" letter-spacing="-2">/neuer-kunde</text>
+<text x="66" y="200" font-size="25" fill="#EDE6DA">Website projects for Claude, from the first question</text>
+<text x="66" y="234" font-size="25" fill="#EDE6DA">to the final invoice.</text>
+<rect x="66" y="262" width="12" height="12" rx="2" fill="#FF7A45"/>
+<text x="88" y="273" font-size="16" fill="#8A93A3">questions  ·  design  ·  3D  ·  tests  ·  contract  ·  invoice  ·  learns after every project</text>
+</svg>

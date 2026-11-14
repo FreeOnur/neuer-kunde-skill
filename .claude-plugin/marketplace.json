@@ -1,0 +1,19 @@
+{
+  "name": "neuer-kunde",
+  "description": "/neuer-kunde: a Claude skill that runs website projects end to end, from the first question to the final invoice.",
+  "owner": { "name": "FreeOnur" },
+  "plugins": [
+    {
+      "name": "neuer-kunde",
+      "description": "Runs a whole website project: asks the right questions, sets up the project folder, builds the site with 3D and motion, checks it with tests, Lighthouse, the Taste Skill gate and simulated customers, keeps money, contract and invoice in order, and improves itself after every project.",
+      "version": "6.0.0",
+      "source": "./",
+      "skills": ["./skills/neuer-kunde"],
+      "author": { "name": "FreeOnur" },
+      "homepage": "https://github.com/FreeOnur/neuer-kunde",
+      "repository": "https://github.com/FreeOnur/neuer-kunde",
+      "license": "MIT",
+      "keywords": ["skills", "website", "freelance", "web-agency", "nextjs", "threejs", "playwright", "lighthouse", "invoice"]
+    }
+  ]
+}

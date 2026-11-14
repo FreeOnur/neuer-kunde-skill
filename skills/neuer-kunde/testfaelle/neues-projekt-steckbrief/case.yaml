@@ -1,0 +1,8 @@
+schema_version: "1.1"
+name: neues-projekt-steckbrief
+expected_outcome: |
+  Aus dem Steckbrief entsteht der Projektordner Kunden/Tischlerei-Gruber (Kopie der Kundenvorlage),
+  eine ausgefüllte Projekt.md ohne erfundene Daten (Fehlendes als ❓ unter Offen) und eine Zeile im Blatt
+  Projekte mit 2400 €. Keine Fragen, Annahmen werden genannt. Kein Code und kein Design.
+context:
+  scaffold_script: place-files.sh
