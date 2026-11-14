@@ -84,14 +84,14 @@ Built from a one-line brief each, to show what the skill does for small local bu
 ### SMTN, a music producer (real client)
 
 <p align="center">
-  <img src="docs/readme/motion-smtn.webp" width="720" alt="SMTN site: the producer's logo breaks out of chains while scrolling">
+  <img src="docs/readme/motion-smtn.webp" width="520" alt="SMTN site: the producer's logo breaks out of chains while scrolling">
   <br>
   <sub>Brutalist and loud on purpose. The chains lock the beats away and break as you scroll. 61 rounds of changes went into this skill.</sub>
 </p>
 
 ## What it does
 
-| | |
+| It | How |
 | --- | --- |
 | **Asks first, in the right order** | Five short rounds: who it is for, content and proof, direction (style, colours, fonts with live previews), leitmotif and 3D, tech and hosting. Answers that change everything (does money flow through the site?) come first. |
 | **Never makes things up** | No invented clients, prices, testimonials or numbers. What is missing is marked as open and stays hidden on the site until you fill it in. |
@@ -108,6 +108,7 @@ Built from a one-line brief each, to show what the skill does for small local bu
 ## How a project runs
 
 ```mermaid
+%%{init: {'flowchart': {'wrappingWidth': 420}}}%%
 flowchart TD
     A["/neuer-kunde"] --> B{"Project folder<br>found?"}
     B -- no --> C["Set up: folder, finance workbook,<br>contract and invoice templates"]
