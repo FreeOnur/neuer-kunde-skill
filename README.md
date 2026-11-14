@@ -108,20 +108,28 @@ Built from a one-line brief each, to show what the skill does for small local bu
 ## How a project runs
 
 ```mermaid
-%%{init: {'flowchart': {'wrappingWidth': 420}}}%%
-flowchart TD
-    A["/neuer-kunde"] --> B{"Project folder<br>found?"}
-    B -- no --> C["Set up: folder, finance workbook,<br>contract and invoice templates"]
-    B -- yes --> D
-    C --> D["5 rounds of questions<br>(with live previews for colours and fonts)"]
-    D --> E["Project folder, Projekt.md,<br>row in the finance workbook"]
-    E --> F["Concept: sitemap, story of the page,<br>leitmotif, 3 hero directions to pick from"]
-    F --> G["Build: Next.js, motion, 3D,<br>CMS, form, legal pages"]
-    G --> H["Quality gates: tests, Taste Skill,<br>Lighthouse, simulated customers"]
-    H -- "something red" --> G
-    H -- "all green" --> I["Change rounds with the client<br>(note, backup, tests every round)"]
-    I --> J["Live: final invoice,<br>handover list"]
-    J --> K["Improve the skill from this project's<br>corrections, test new vs. old"]
+flowchart LR
+    subgraph S1 ["1 · Start"]
+        direction TB
+        A["/neuer-kunde"] --> B{"Projects folder?"}
+        B -- no --> C["Set it up: folder,<br>finance workbook, templates"]
+        B -- yes --> D
+        C --> D["5 rounds of questions<br>with live previews"]
+        D --> E["Project folder and<br>row in the workbook"]
+    end
+    subgraph S2 ["2 · Build"]
+        direction TB
+        F["Concept: sitemap, story,<br>leitmotif, 3 hero drafts"] --> G["Build: Next.js, motion,<br>3D, CMS, form, legal"]
+        G --> H{"Quality gates"}
+        H -- red --> G
+    end
+    subgraph S3 ["3 · Finish"]
+        direction TB
+        I["Change rounds with<br>the client, a note each"] --> J["Live: final invoice,<br>handover list"]
+        J --> K["Improve the skill,<br>test new vs. old"]
+    end
+    S1 --> S2
+    S2 -- all green --> S3
 ```
 
 ## Quality gates
