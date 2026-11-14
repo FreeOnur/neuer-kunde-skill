@@ -168,8 +168,8 @@ The skill needs **Python 3** with `openpyxl` and `python-docx` for the folder, w
 **Claude Code (plugin)**
 
 ```
-/plugin marketplace add FreeOnur/neuer-kunde
-/plugin install neuer-kunde@neuer-kunde
+/plugin marketplace add FreeOnur/neuer-kunde-skill
+/plugin install neuer-kunde@neuer-kunde-skill
 ```
 
 <details>
@@ -178,14 +178,14 @@ The skill needs **Python 3** with `openpyxl` and `python-docx` for the folder, w
 **With the skills CLI**
 
 ```bash
-npx skills add https://github.com/FreeOnur/neuer-kunde --skill neuer-kunde
+npx skills add https://github.com/FreeOnur/neuer-kunde-skill --skill neuer-kunde
 ```
 
 **From a clone, linked instead of copied** (a `git pull` updates it)
 
 ```bash
-git clone https://github.com/FreeOnur/neuer-kunde.git
-cd neuer-kunde && ./install.sh
+git clone https://github.com/FreeOnur/neuer-kunde-skill.git
+cd neuer-kunde-skill && ./install.sh
 ```
 
 **Claude.ai**
